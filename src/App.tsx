@@ -249,7 +249,7 @@ const App: React.FC = () => {
             ☰
           </button>
           <img
-            src="/eyas-logo.svg"
+            src={`${import.meta.env.BASE_URL}eyas-logo.svg`}
             alt="Eyas Logo"
             style={{
               width: '40px',

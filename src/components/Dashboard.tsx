@@ -32,42 +32,74 @@ export const Dashboard: React.FC<{
   const StatCard: React.FC<{ label: string; value: string | number; icon: string; color: string; subtext?: string }> = ({ label, value, icon, color, subtext }) => (
     <div className="glass-card" style={{
       ...cardStyle,
-      padding: '12px 16px', // Reduced padding
+      padding: '16px', // Increased padding slightly for balance
       display: 'flex',
-      alignItems: 'center',
-      gap: '12px', // Reduced gap
+      alignItems: 'center', // Ensure vertical centering
+      gap: '16px', // Better gap
       position: 'relative',
       overflow: 'hidden',
-      minHeight: '80px' // Enforce smaller height
+      minHeight: '90px', // Slightly taller
+      justifyContent: 'flex-start'
     }}>
       <div style={{
-        background: `${color}20`,
+        background: `${color}15`, // More subtle background
         color: color,
-        width: '40px', // Smaller icon background
-        height: '40px',
-        borderRadius: '10px',
+        width: '48px',
+        height: '48px',
+        borderRadius: '12px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: '20px' // Smaller icon size
+        fontSize: '24px',
+        flexShrink: 0 // Prevent icon shrinking
       }}>
         {icon}
       </div>
-      <div>
-        <div style={{ color: 'var(--text-secondary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
-        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff', marginTop: '2px' }}>{value}</div>
-        {subtext && <div style={{ fontSize: '10px', color: color, marginTop: '1px' }}>{subtext}</div>}
+      <div style={{ flex: 1, minWidth: 0 }}> {/* flex: 1 and minWidth: 0 for text truncation to work */}
+        <div style={{
+          color: 'var(--text-secondary)',
+          fontSize: '11px',
+          fontWeight: '600',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }}>
+          {label}
+        </div>
+        <div style={{
+          fontSize: '22px',
+          fontWeight: 'bold',
+          color: '#fff',
+          marginTop: '4px',
+          lineHeight: '1.2'
+        }}>
+          {value}
+        </div>
+        {subtext && (
+          <div style={{
+            fontSize: '11px',
+            color: color,
+            marginTop: '2px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>
+            {subtext}
+          </div>
+        )}
       </div>
       {/* Decorative Blur */}
       <div style={{
         position: 'absolute',
-        right: '-10px',
-        top: '-10px',
-        width: '60px',
-        height: '60px',
+        right: '-15px',
+        top: '-15px',
+        width: '70px',
+        height: '70px',
         background: color,
-        filter: 'blur(30px)',
-        opacity: 0.1,
+        filter: 'blur(35px)',
+        opacity: 0.08,
         pointerEvents: 'none'
       }} />
     </div>

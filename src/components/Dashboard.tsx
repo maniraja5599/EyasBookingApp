@@ -16,8 +16,8 @@ export const Dashboard: React.FC<{
   const tomorrowEvents = orders.filter(o => o.eventDate === tomorrow);
   const pendingOrders = orders.filter(o => o.status !== 'delivered' && o.status !== 'completed');
   const newEnquiries = enquiries.filter(e => e.status === 'new');
-  const totalReceived = orders.reduce((sum, o) => sum + o.amountPaid, 0);
-  const totalPending = orders.reduce((sum, o) => sum + (o.totalAmount - o.amountPaid), 0);
+  const totalReceived = orders.reduce((sum, o) => sum + (o.amountPaid || 0), 0);
+  const totalPending = orders.reduce((sum, o) => sum + ((o.totalAmount || 0) - (o.amountPaid || 0)), 0);
 
   const statCards = [
     { label: 'Pending Orders', value: pendingOrders.length, icon: '📦', color: '#3B82F6', onClick: onViewOrders },

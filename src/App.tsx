@@ -506,7 +506,7 @@ const App: React.FC = () => {
         padding: '8px 0',
         zIndex: 100,
       }}>
-        {navItems.map(item => (
+        {navItems.filter(i => ['dashboard', 'orders', 'enquiries', 'calendar'].includes(i.id)).map(item => (
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id as any)}
@@ -531,6 +531,28 @@ const App: React.FC = () => {
             </span>
           </button>
         ))}
+
+        {/* Menu Button */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            borderRadius: 'var(--radius)',
+            color: 'var(--text-secondary)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '4px',
+            cursor: 'pointer',
+            padding: '8px 12px',
+            flex: 1,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <Icon symbol="☰" size={24} />
+          <span style={{ fontSize: '10px' }}>Menu</span>
+        </button>
       </nav>
 
 

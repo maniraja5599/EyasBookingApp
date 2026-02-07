@@ -645,7 +645,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers
             {/* Pricing */}
             <div className="glass-card" style={{ background: 'var(--glass-bg)', padding: '16px', borderRadius: 'var(--radius-lg)', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
               <h3 style={{
-                background: 'var(--accent-gold)',
+                background: 'var(--gold)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 marginBottom: '16px',

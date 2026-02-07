@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
-  <circle cx="250" cy="250" r="240" fill="#FFD700" stroke="white" stroke-width="20"/>
-  <circle cx="250" cy="250" r="200" fill="none" stroke="black" stroke-width="5"/>
-  <path id="curve" d="M 100 250 A 150 150 0 1 1 400 250" fill="none"/>
-  <text x="50%" y="40%" dominant-baseline="middle" text-anchor="middle" font-family="'Brush Script MT', cursive" font-weight="bold" font-size="120" fill="black">Eyas</text>
-  <text x="50%" y="65%" dominant-baseline="middle" text-anchor="middle" font-family="'Brush Script MT', cursive" font-weight="bold" font-size="100" fill="black">drapist</text>
-</svg>

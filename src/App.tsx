@@ -534,7 +534,7 @@ const App: React.FC = () => {
 
         {/* Menu Button */}
         <button
-          onClick={() => setSidebarOpen(true)}
+          onClick={() => setSidebarOpen(!sidebarOpen)}
           style={{
             background: 'transparent',
             border: 'none',

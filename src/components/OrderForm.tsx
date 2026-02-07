@@ -142,6 +142,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers
     };
 
     onSave(newOrder as Order);
+    setStep(3); // Go to Success Step
   };
 
   const handlePickContact = async () => {
@@ -726,22 +727,63 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers
               style={{ ...inputStyle, resize: 'vertical' }}
             />
 
+            {/* Button Actions */}
             <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-              <button onClick={onClose} style={{ flex: 1, padding: '16px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontSize: '16px', cursor: 'pointer', fontWeight: '600' }}>
+              <button
+                onClick={onClose}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  background: 'var(--dark-lighter)',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius)',
+                  fontSize: '15px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--text-muted)'}
+                onMouseOut={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
+              >
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  handleSubmit();
-                  // Optional: Automatically ask to share on WhatsApp after save
-                  // handleWhatsAppShare(); // For now, let's just save. Maybe add a dedicated button?
+                onClick={handleSubmit}
+                style={{
+                  flex: 2,
+                  padding: '14px',
+                  background: 'var(--gold)',
+                  color: 'var(--dark)',
+                  border: 'none',
+                  borderRadius: 'var(--radius)',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  boxShadow: 'var(--shadow)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
                 }}
-                style={{ flex: 2, padding: '16px', background: 'var(--accent-gold)', color: '#000', border: 'none', borderRadius: 'var(--radius-md)', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: 'var(--shadow-glow)' }}
               >
-                {order ? 'Update Order' : 'Create Order'}
+                {order ? 'Update Order' : 'Create Order'} ➔
               </button>
             </div>
-            {/* WhatsApp Share Button (Visible only when editing or after creation logic - but here we only have save) */}
+          </div>
+        )}
+
+        {/* STEP 3: SUCCESS & SHARE */}
+        {step === 3 && (
+          <div className="animate-fadeIn" style={{ textAlign: 'center', padding: '20px 0' }}>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🎉</div>
+            <h3 style={{ fontSize: '22px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '8px' }}>
+              {order ? 'Order Updated!' : 'Order Created!'}
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
+              The order has been successfully saved.
+            </p>
+
             <button
               onClick={() => {
                 const balance = (formData.totalAmount || 0) - (formData.amountPaid || 0);
@@ -762,22 +804,37 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers
               }}
               style={{
                 width: '100%',
-                marginTop: '12px',
-                padding: '12px',
+                padding: '16px',
                 background: '#25D366',
                 color: '#fff',
                 border: 'none',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '16px',
+                borderRadius: 'var(--radius-lg)',
+                fontSize: '18px',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px'
+                gap: '10px',
+                marginBottom: '16px',
+                boxShadow: '0 4px 12px rgba(37, 211, 102, 0.3)'
               }}
             >
-              <span>💬 Share Details on WhatsApp</span>
+              <span style={{ fontSize: '24px' }}>💬</span> Share on WhatsApp
+            </button>
+
+            <button
+              onClick={onClose}
+              style={{
+                background: 'transparent',
+                color: 'var(--text-secondary)',
+                border: 'none',
+                fontSize: '15px',
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }}
+            >
+              Close / Create Another
             </button>
           </div>
         )}

@@ -71,8 +71,8 @@ const App: React.FC = () => {
     } else {
       setOrders([...orders, { ...order, id: generateId(), createdAt: new Date().toISOString() }]);
     }
-    setShowOrderForm(false);
-    setEditingOrder(null);
+    // setShowOrderForm(false); // Managed by OrderForm now
+    // setEditingOrder(null);
   };
 
   const handleSaveEnquiry = (enquiry: Enquiry) => {

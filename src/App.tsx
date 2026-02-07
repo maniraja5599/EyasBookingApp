@@ -533,39 +533,7 @@ const App: React.FC = () => {
         ))}
       </nav>
 
-      {/* Floating Action Button - Professional */}
-      <button
-        onClick={() => {
-          if (activeTab === 'enquiries') {
-            setShowEnquiryForm(true);
-          } else {
-            setShowOrderForm(true);
-          }
-        }}
-        style={{
-          position: 'fixed',
-          bottom: '80px',
-          right: '16px',
-          width: '56px',
-          height: '56px',
-          borderRadius: '50%',
-          background: 'var(--gold)',
-          color: 'var(--dark)',
-          border: 'none',
-          fontSize: '28px',
-          fontWeight: 'bold',
-          cursor: 'pointer',
-          boxShadow: 'var(--shadow-lg)',
-          zIndex: 100,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.2s ease',
-        }}
-        title="Press N to create new"
-      >
-        +
-      </button>
+
 
       {/* Order Form Modal */}
       {showOrderForm && (

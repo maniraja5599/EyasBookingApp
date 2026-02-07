@@ -32,33 +32,33 @@ export const Dashboard: React.FC<{
   const StatCard: React.FC<{ label: string; value: string | number; icon: string; color: string; subtext?: string }> = ({ label, value, icon, color, subtext }) => (
     <div className="glass-card" style={{
       ...cardStyle,
-      padding: '16px', // Increased padding slightly for balance
+      padding: '12px', // Compact padding
       display: 'flex',
-      alignItems: 'center', // Ensure vertical centering
-      gap: '16px', // Better gap
+      alignItems: 'center',
+      gap: '12px', // Compact gap
       position: 'relative',
       overflow: 'hidden',
-      minHeight: '90px', // Slightly taller
+      minHeight: '80px', // Compact height
       justifyContent: 'flex-start'
     }}>
       <div style={{
-        background: `${color}15`, // More subtle background
+        background: `${color}15`,
         color: color,
-        width: '48px',
-        height: '48px',
-        borderRadius: '12px',
+        width: '40px', // Smaller icon box
+        height: '40px',
+        borderRadius: '10px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: '24px',
-        flexShrink: 0 // Prevent icon shrinking
+        fontSize: '20px', // Smaller icon
+        flexShrink: 0
       }}>
         {icon}
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}> {/* flex: 1 and minWidth: 0 for text truncation to work */}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <div style={{
           color: 'var(--text-secondary)',
-          fontSize: '11px',
+          fontSize: '10px', // Smaller label
           fontWeight: '600',
           textTransform: 'uppercase',
           letterSpacing: '0.5px',
@@ -69,19 +69,19 @@ export const Dashboard: React.FC<{
           {label}
         </div>
         <div style={{
-          fontSize: '22px',
+          fontSize: '18px', // Smaller value
           fontWeight: 'bold',
           color: '#fff',
-          marginTop: '4px',
+          marginTop: '2px', // Tighter spacing
           lineHeight: '1.2'
         }}>
           {value}
         </div>
         {subtext && (
           <div style={{
-            fontSize: '11px',
+            fontSize: '10px', // Smaller subtext
             color: color,
-            marginTop: '2px',
+            marginTop: '1px',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis'
@@ -90,16 +90,16 @@ export const Dashboard: React.FC<{
           </div>
         )}
       </div>
-      {/* Decorative Blur */}
+      {/* Decorative Blur - Reduced size */}
       <div style={{
         position: 'absolute',
-        right: '-15px',
-        top: '-15px',
-        width: '70px',
-        height: '70px',
+        right: '-10px',
+        top: '-10px',
+        width: '50px',
+        height: '50px',
         background: color,
-        filter: 'blur(35px)',
-        opacity: 0.08,
+        filter: 'blur(25px)',
+        opacity: 0.1,
         pointerEvents: 'none'
       }} />
     </div>

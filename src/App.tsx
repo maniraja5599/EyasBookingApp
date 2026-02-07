@@ -9,6 +9,7 @@ import { EnquiryList } from './components/EnquiryList';
 import { Order, Enquiry, Settings, Customer } from './types';
 import { generateId } from './utils';
 import { ReferralReport } from './components/ReferralReport';
+import { CustomerReport } from './components/CustomerReport';
 
 // ... (existing imports)
 

@@ -1,0 +1,30 @@
+{
+    "name": "Eyas Saree Drapist",
+    "short_name": "Eyas Drapist",
+    "description": "Professional Saree Draping & Pre-Pleat Services in Namakkal",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#1a1a2e",
+    "theme_color": "#F5A623",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "/eyas-logo.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}

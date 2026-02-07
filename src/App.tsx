@@ -8,11 +8,12 @@ import { OrderList } from './components/OrderList';
 import { EnquiryList } from './components/EnquiryList';
 import { Order, Enquiry, Settings, Customer } from './types';
 import { generateId } from './utils';
+import { CustomerReport } from './components/CustomerReport';
 import logo from './assets/eyas-logo.svg';
 
 // Main App Component
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'enquiries' | 'calendar' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'enquiries' | 'calendar' | 'settings' | 'customers'>('dashboard');
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
@@ -180,6 +181,7 @@ const App: React.FC = () => {
     { id: 'dashboard', label: 'Home', symbol: '🏠' },
     { id: 'orders', label: 'Orders', symbol: '📦' },
     { id: 'enquiries', label: 'Enquiries', symbol: '📋' },
+    { id: 'customers', label: 'Customers', symbol: '👥' },
     { id: 'calendar', label: 'Calendar', symbol: '📅' },
     { id: 'settings', label: 'Settings', symbol: '⚙️' },
   ];
@@ -203,8 +205,9 @@ const App: React.FC = () => {
         case '1': setActiveTab('dashboard'); break;
         case '2': setActiveTab('orders'); break;
         case '3': setActiveTab('enquiries'); break;
-        case '4': setActiveTab('calendar'); break;
-        case '5': setActiveTab('settings'); break;
+        case '4': setActiveTab('customers'); break;
+        case '5': setActiveTab('calendar'); break;
+        case '6': setActiveTab('settings'); break;
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -431,6 +434,19 @@ const App: React.FC = () => {
               onEdit={(enquiry) => { setEditingEnquiry(enquiry); setShowEnquiryForm(true); }}
               onDelete={(id) => setEnquiries(enquiries.filter(e => e.id !== id))}
               onConvert={convertEnquiryToOrder}
+            />
+          )}
+
+          {activeTab === 'customers' && (
+            <CustomerReport
+              customers={customers}
+              orders={orders}
+              enquiries={enquiries}
+              cardStyle={cardStyle}
+              onViewOrder={(order) => {
+                setEditingOrder(order);
+                setShowOrderForm(true);
+              }}
             />
           )}
 

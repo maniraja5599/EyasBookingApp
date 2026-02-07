@@ -65,4 +65,11 @@ export interface Customer {
     phone: string;
     permanentAddress: string;
     createdAt: string;
+    referralSource?: 'instagram' | 'customer' | 'makeup_artist' | 'other';
+    referredByCustomerId?: string; // ID of the customer who referred
+    makeupArtistDetails?: {
+        name: string;
+        phone: string;
+        instagram?: string;
+    };
 }

@@ -129,7 +129,13 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers
         name: formData.customerName!,
         phone: formData.phone!,
         permanentAddress: permanentAddress, // Save the permanent address entered
-        createdAt: now
+        createdAt: now,
+        // @ts-ignore
+        referralSource: formData.referralSource || 'instagram',
+        // @ts-ignore
+        referredByCustomerId: formData.referredByCustomerId,
+        // @ts-ignore
+        makeupArtistDetails: formData.makeupArtistDetails
       };
       setCustomers(prev => [...prev, newCustomer]);
     }
@@ -471,6 +477,100 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers
                 <small style={{ display: 'block', color: '#666', marginBottom: '16px', marginTop: '-12px' }}>
                   This address will be saved for future bookings.
                 </small>
+
+                {/* REFERRAL SECTION */}
+                <div style={{ padding: '16px', background: 'rgba(255, 215, 0, 0.05)', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px' }}>
+                  <h4 style={{ color: 'var(--gold)', marginBottom: '12px', fontSize: '14px' }}>📢 Referral Source (How did they find us?)</h4>
+
+                  <select
+                    value={(formData as any).referralSource || 'instagram'}
+                    onChange={(e) => setFormData(prev => ({ ...prev, referralSource: e.target.value } as any))}
+                    style={inputStyle}
+                  >
+                    <option value="instagram">📱 Instagram / Social Media</option>
+                    <option value="customer">👤 Referred by Existing Customer</option>
+                    <option value="makeup_artist">💄 Makeup Artist Reference</option>
+                    <option value="other">⚪ Other / Walk-in</option>
+                  </select>
+
+                  {/* Makeup Artist Details */}
+                  {(formData as any).referralSource === 'makeup_artist' && (
+                    <div className="animate-fadeIn" style={{ marginLeft: '12px', paddingLeft: '12px', borderLeft: '2px solid var(--purple)' }}>
+                      <input
+                        type="text"
+                        placeholder="Makeup Artist Name"
+                        value={(formData as any).makeupArtistDetails?.name || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          makeupArtistDetails: { ...(prev as any).makeupArtistDetails, name: e.target.value }
+                        } as any))}
+                        style={{ ...inputStyle, marginBottom: '8px' }}
+                      />
+                      <input
+                        type="tel"
+                        placeholder="MUA Phone Number"
+                        value={(formData as any).makeupArtistDetails?.phone || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          makeupArtistDetails: { ...(prev as any).makeupArtistDetails, phone: e.target.value }
+                        } as any))}
+                        style={{ ...inputStyle, marginBottom: '8px' }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Instagram ID (Optional)"
+                        value={(formData as any).makeupArtistDetails?.instagram || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          makeupArtistDetails: { ...(prev as any).makeupArtistDetails, instagram: e.target.value }
+                        } as any))}
+                        style={{ ...inputStyle, marginBottom: '0' }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Customer Referral Search */}
+                  {(formData as any).referralSource === 'customer' && (
+                    <div className="animate-fadeIn">
+                      <input
+                        type="text"
+                        placeholder="Search Referring Customer Name/Phone..."
+                        onChange={(e) => {
+                          // Set a temporary search state for referrer
+                          // For simplicity, we might need a local state here. 
+                          // Let's rely on basic text input for now or implement a mini-search.
+                          // Given complexity, let's use a simple dropdown of customers if list isn't huge, 
+                          // or just a text field that searches.
+                          setFormData(prev => ({ ...prev, tempReferrerSearch: e.target.value } as any));
+                        }}
+                        value={(formData as any).tempReferrerSearch || ''}
+                        style={{ ...inputStyle, marginBottom: '4px' }}
+                      />
+                      {/* Mini-Suggestions for Referrer */}
+                      {(formData as any).tempReferrerSearch && (
+                        <div style={{ background: '#252542', border: '1px solid #444', borderRadius: '4px', maxHeight: '100px', overflowY: 'auto' }}>
+                          {customers
+                            .filter(c => c.name.toLowerCase().includes(((formData as any).tempReferrerSearch || '').toLowerCase()))
+                            .slice(0, 3)
+                            .map(c => (
+                              <div
+                                key={c.id}
+                                style={{ padding: '8px', borderBottom: '1px solid #333', cursor: 'pointer', fontSize: '13px' }}
+                                onClick={() => setFormData(prev => ({
+                                  ...prev,
+                                  referredByCustomerId: c.id,
+                                  tempReferrerSearch: `${c.name} (${c.phone})` // Display selected
+                                } as any))}
+                              >
+                                {c.name} ({c.phone})
+                              </div>
+                            ))
+                          }
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

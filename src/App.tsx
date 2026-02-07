@@ -8,12 +8,16 @@ import { OrderList } from './components/OrderList';
 import { EnquiryList } from './components/EnquiryList';
 import { Order, Enquiry, Settings, Customer } from './types';
 import { generateId } from './utils';
-import { CustomerReport } from './components/CustomerReport';
+import { ReferralReport } from './components/ReferralReport';
+
+// ... (existing imports)
+
+
 import logo from './assets/eyas-logo.svg';
 
 // Main App Component
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'enquiries' | 'calendar' | 'settings' | 'customers'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'enquiries' | 'customers' | 'referrals' | 'calendar' | 'settings'>('dashboard');
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
@@ -182,6 +186,7 @@ const App: React.FC = () => {
     { id: 'orders', label: 'Orders', symbol: '📦' },
     { id: 'enquiries', label: 'Enquiries', symbol: '📋' },
     { id: 'customers', label: 'Customers', symbol: '👥' },
+    { id: 'referrals', label: 'Referrals', symbol: '📢' },
     { id: 'calendar', label: 'Calendar', symbol: '📅' },
     { id: 'settings', label: 'Settings', symbol: '⚙️' },
   ];
@@ -433,7 +438,7 @@ const App: React.FC = () => {
               btnSecondary={btnSecondary}
               onEdit={(enquiry) => { setEditingEnquiry(enquiry); setShowEnquiryForm(true); }}
               onDelete={(id) => setEnquiries(enquiries.filter(e => e.id !== id))}
-              onConvert={convertEnquiryToOrder}
+              onConvert={(enquiry) => convertEnquiryToOrder(enquiry)}
             />
           )}
 
@@ -448,6 +453,10 @@ const App: React.FC = () => {
                 setShowOrderForm(true);
               }}
             />
+          )}
+
+          {activeTab === 'referrals' && (
+            <ReferralReport customers={customers} cardStyle={cardStyle} />
           )}
 
           {activeTab === 'calendar' && (

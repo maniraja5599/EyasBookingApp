@@ -75,28 +75,8 @@ export const Dashboard: React.FC<{
 
   return (
     <div className="animate-fadeIn">
-      {/* Header Section */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '20px' }}>
-        <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff', marginBottom: '2px' }}>
-            Welcome Back, <span style={{ color: 'var(--gold)' }}>Mani Raja</span> 👋
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Here's what's happening today.</p>
-        </div>
-
-        {/* Date Display */}
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
-            {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </div>
-          <div style={{ color: 'var(--gold)', fontSize: '12px', fontWeight: '600' }}>
-            {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Grid - Moved up and compacted */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+      {/* Stats Grid - Compact Single Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px', marginTop: '20px' }}>
         <StatCard
           label="Expec. Revenue"
           value={formatCurrency(orders.filter(o => o.eventDate === today).reduce((sum, o) => sum + o.totalAmount, 0))}

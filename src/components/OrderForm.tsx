@@ -227,54 +227,135 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-accent)', fontSize: '28px', cursor: 'pointer' }}>✕</button>
         </div>
 
-        {/* STEP 1: PHONE VERIFICATION */}
+        {/* STEP 1: SEARCH & IDENTIFY */}
         {step === 1 && !order && (
           <div className="animate-fadeIn">
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>📱</div>
-              <h3 style={{ fontSize: '20px', color: '#fff', marginBottom: '8px' }}>Customer Check</h3>
-              <p style={{ color: '#aaa' }}>Enter mobile number to check for existing customer history.</p>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
+              <h3 style={{ fontSize: '20px', color: '#fff', marginBottom: '8px' }}>Find Customer</h3>
+              <p style={{ color: '#aaa' }}>Search by Name or Phone Number</p>
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', marginBottom: '24px' }}>
-              <div style={{ flex: 1 }}>
-                <label style={labelStyle}>Phone Number *</label>
+            <div style={{ position: 'relative', marginBottom: '24px' }}>
+              <label style={labelStyle}>Search Customer</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
                 <input
-                  type="tel"
-                  value={formData.phone || ''}
+                  type="text"
+                  value={formData.phone || ''} // Using phone field as temporary search input
                   onChange={(e) => {
                     const val = e.target.value;
-                    const cleanVal = val.replace(/\D/g, '').slice(0, 10);
-                    console.log('Phone input change:', cleanVal);
-                    setFormData(prev => ({ ...prev, phone: cleanVal }));
+                    setFormData(prev => ({ ...prev, phone: val, customerName: '' })); // Clear name when typing new search
                   }}
-                  placeholder="Enter phone number"
-                  style={{ ...inputStyle, marginBottom: 0, fontSize: '20px', letterSpacing: '1px' }}
+                  onFocus={() => {
+                    // If we have text, show suggestions
+                  }}
+                  placeholder="Type Name or Phone..."
+                  style={{ ...inputStyle, marginBottom: 0, fontSize: '18px' }}
                   autoFocus
+                  autoComplete="off"
                 />
+                <button
+                  onClick={handlePickContact}
+                  style={{
+                    padding: '12px',
+                    background: 'var(--bg-tertiary)',
+                    border: '1px solid #444',
+                    borderRadius: '8px',
+                    color: 'var(--accent-color)',
+                    cursor: 'pointer',
+                    height: '50px',
+                    width: '50px',
+                    fontSize: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  title="Pick from Contacts"
+                >
+                  📒
+                </button>
               </div>
-              <button
-                onClick={handlePickContact}
-                style={{
-                  padding: '12px',
-                  background: 'var(--bg-tertiary)',
-                  border: '1px solid #444',
-                  borderRadius: '8px',
-                  color: 'var(--accent-color)',
-                  cursor: 'pointer',
-                  height: '50px',
-                  width: '50px',
-                  fontSize: '24px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-                title="Pick from Contacts"
-              >
-                📒
-              </button>
+
+              {/* Suggestions Dropdown */}
+              {formData.phone && formData.phone.length > 1 && !isExistingCustomer && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  background: 'rgba(30, 30, 50, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid var(--gold)',
+                  borderRadius: '0 0 8px 8px',
+                  zIndex: 10,
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                  marginTop: '4px'
+                }}>
+                  {customers
+                    .filter(c =>
+                      c.name.toLowerCase().includes((formData.phone || '').toLowerCase()) ||
+                      c.phone.includes(formData.phone || '')
+                    )
+                    .slice(0, 5)
+                    .map(customer => (
+                      <div
+                        key={customer.id}
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            customerName: customer.name,
+                            phone: customer.phone,
+                            address: customer.permanentAddress // Pre-fill site address/permanent address logic needs care
+                          }));
+                          setIsExistingCustomer(true);
+                          setPermanentAddress(customer.permanentAddress);
+                          setStep(2);
+                        }}
+                        style={{
+                          padding: '12px',
+                          borderBottom: '1px solid #444',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          color: '#fff'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)'}
+                        onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 'bold' }}>{customer.name}</div>
+                          <div style={{ fontSize: '12px', color: '#aaa' }}>{customer.phone}</div>
+                        </div>
+                        <span style={{ fontSize: '18px' }}>➔</span>
+                      </div>
+                    ))
+                  }
+                  {/* Option to create new if it looks like a phone number */}
+                  {/^\d{10}$/.test(formData.phone || '') && (
+                    customers.find(c => c.phone === formData.phone) ? null : (
+                      <div
+                        onClick={handlePhoneCheck}
+                        style={{
+                          padding: '12px',
+                          cursor: 'pointer',
+                          color: 'var(--gold)',
+                          fontWeight: 'bold',
+                          textAlign: 'center',
+                          background: 'rgba(255, 255, 255, 0.05)'
+                        }}
+                      >
+                        + Create New Customer with this Phone
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
             </div>
 
+            {/* Only show 'Next' button if we manually want to proceed (e.g. typing a new number and clicking next) */}
             <button
               onClick={handlePhoneCheck}
               style={{
@@ -287,7 +368,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers
                 fontSize: '18px',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                boxShadow: 'var(--shadow-glow)'
+                boxShadow: 'var(--shadow-glow)',
+                opacity: (formData.phone && formData.phone.length >= 3) ? 1 : 0.5,
+                pointerEvents: (formData.phone && formData.phone.length >= 3) ? 'auto' : 'none'
               }}
             >
               Next ➔

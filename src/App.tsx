@@ -8,6 +8,7 @@ import { OrderList } from './components/OrderList';
 import { EnquiryList } from './components/EnquiryList';
 import { Order, Enquiry, Settings, Customer } from './types';
 import { generateId } from './utils';
+import logo from './assets/eyas-logo.svg';
 
 // Main App Component
 const App: React.FC = () => {
@@ -249,7 +250,7 @@ const App: React.FC = () => {
             ☰
           </button>
           <img
-            src={`${import.meta.env.BASE_URL}eyas-logo.svg`}
+            src={logo}
             alt="Eyas Logo"
             style={{
               width: '40px',

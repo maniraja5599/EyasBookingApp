@@ -229,7 +229,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers
 
         {/* STEP 1: SEARCH & IDENTIFY */}
         {step === 1 && !order && (
-          <div className="animate-fadeIn">
+          <div className="animate-fadeIn" style={{ minHeight: '350px' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
               <h3 style={{ fontSize: '20px', color: '#fff', marginBottom: '8px' }}>Find Customer</h3>
@@ -283,14 +283,13 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers
                   top: '100%',
                   left: 0,
                   right: 0,
-                  background: 'rgba(30, 30, 50, 0.95)',
-                  backdropFilter: 'blur(10px)',
+                  background: '#1e1e2e', // Solid background to avoid transparency issues
                   border: '1px solid var(--gold)',
                   borderRadius: '0 0 8px 8px',
-                  zIndex: 10,
+                  zIndex: 1000,
                   maxHeight: '200px',
                   overflowY: 'auto',
-                  boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
                   marginTop: '4px'
                 }}>
                   {customers

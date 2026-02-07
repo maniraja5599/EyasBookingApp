@@ -32,73 +32,76 @@ export const Dashboard: React.FC<{
   const StatCard: React.FC<{ label: string; value: string | number; icon: string; color: string; subtext?: string }> = ({ label, value, icon, color, subtext }) => (
     <div className="glass-card" style={{
       ...cardStyle,
-      padding: '12px', // Compact padding
+      padding: '10px', // Very compact padding
       display: 'flex',
-      alignItems: 'center',
-      gap: '12px', // Compact gap
+      flexDirection: 'column', // Vertical stack
+      alignItems: 'center', // Center everything
+      gap: '4px', // Tighter gap
       position: 'relative',
       overflow: 'hidden',
-      minHeight: '80px', // Compact height
-      justifyContent: 'flex-start'
+      minHeight: '100px', // Taller to fit vertical content
+      justifyContent: 'center',
+      textAlign: 'center'
     }}>
       <div style={{
         background: `${color}15`,
         color: color,
-        width: '40px', // Smaller icon box
-        height: '40px',
-        borderRadius: '10px',
+        width: '32px', // Even smaller icon box
+        height: '32px',
+        borderRadius: '8px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: '20px', // Smaller icon
-        flexShrink: 0
+        fontSize: '16px',
+        marginBottom: '4px'
       }}>
         {icon}
       </div>
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+
+      <div style={{
+        fontSize: '16px',
+        fontWeight: 'bold',
+        color: '#fff',
+        lineHeight: '1.2'
+      }}>
+        {value}
+      </div>
+
+      <div style={{
+        color: 'var(--text-secondary)',
+        fontSize: '9px', // Small font for distinct label
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+        lineHeight: '1.2',
+        maxWidth: '100%' // Allow wrapping if needed, but centering helps
+      }}>
+        {label}
+      </div>
+
+      {subtext && (
         <div style={{
-          color: 'var(--text-secondary)',
-          fontSize: '10px', // Smaller label
-          fontWeight: '600',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
+          fontSize: '8px',
+          color: color,
+          opacity: 0.8,
           whiteSpace: 'nowrap',
           overflow: 'hidden',
-          textOverflow: 'ellipsis'
+          textOverflow: 'ellipsis',
+          maxWidth: '100%'
         }}>
-          {label}
+          {subtext}
         </div>
-        <div style={{
-          fontSize: '18px', // Smaller value
-          fontWeight: 'bold',
-          color: '#fff',
-          marginTop: '2px', // Tighter spacing
-          lineHeight: '1.2'
-        }}>
-          {value}
-        </div>
-        {subtext && (
-          <div style={{
-            fontSize: '10px', // Smaller subtext
-            color: color,
-            marginTop: '1px',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis'
-          }}>
-            {subtext}
-          </div>
-        )}
-      </div>
-      {/* Decorative Blur - Reduced size */}
+      )}
+
+      {/* Decorative Blur - Subtle */}
       <div style={{
         position: 'absolute',
         right: '-10px',
         top: '-10px',
-        width: '50px',
-        height: '50px',
+        width: '40px',
+        height: '40px',
         background: color,
-        filter: 'blur(25px)',
+        filter: 'blur(20px)',
         opacity: 0.1,
         pointerEvents: 'none'
       }} />

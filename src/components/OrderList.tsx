@@ -197,7 +197,7 @@ Thank you for choosing us! 🙏`;
                     <span>Base Amount</span>
                     <span>{formatCurrency(order.baseAmount)}</span>
                   </div>
-                  {order.additionalCharges.map((charge, i) => (
+                  {(order.additionalCharges || []).map((charge, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                       <span>{charge.name}</span>
                       <span>{formatCurrency(charge.amount)}</span>
@@ -212,10 +212,10 @@ Thank you for choosing us! 🙏`;
                 {/* Payments */}
                 <div style={{ marginBottom: '16px' }}>
                   <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--accent-color)' }}>Payment History</h4>
-                  {order.payments.length === 0 ? (
+                  {(order.payments || []).length === 0 ? (
                     <p style={{ color: '#666', fontSize: '13px' }}>No payments yet</p>
                   ) : (
-                    order.payments.map(payment => (
+                    (order.payments || []).map(payment => (
                       <div key={payment.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', padding: '8px', background: 'var(--bg-secondary)', borderRadius: '6px', marginBottom: '4px' }}>
                         <span>{formatDate(payment.date)} • {payment.mode}</span>
                         <span style={{ color: '#10B981' }}>+{formatCurrency(payment.amount)}</span>

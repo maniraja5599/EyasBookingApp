@@ -29,88 +29,44 @@ export const Dashboard: React.FC<{
 
   // --- Helper Components ---
 
-  const QuickActionButton: React.FC<{ label: string; icon: string; color: string; onClick: () => void }> = ({ label, icon, color, onClick }) => (
-    <button
-      onClick={onClick}
-      style={{
-        flex: 1,
-        background: `linear-gradient(135deg, ${color}20 0%, ${color}10 100%)`, // Glassy gradient
-        border: `1px solid ${color}40`,
-        borderRadius: '16px',
-        padding: '20px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '12px',
-        cursor: 'pointer',
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        minWidth: '100px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-      }}
-      onMouseOver={(e) => {
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = `0 8px 15px ${color}30`;
-      }}
-      onMouseOut={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
-      }}
-    >
-      <div style={{
-        fontSize: '32px',
-        background: `rgba(255,255,255,0.1)`,
-        width: '60px',
-        height: '60px',
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        boxShadow: `0 0 20px ${color}40`
-      }}>
-        {icon}
-      </div>
-      <span style={{ fontWeight: 'bold', color: '#fff', fontSize: '14px' }}>{label}</span>
-    </button>
-  );
-
   const StatCard: React.FC<{ label: string; value: string | number; icon: string; color: string; subtext?: string }> = ({ label, value, icon, color, subtext }) => (
     <div className="glass-card" style={{
       ...cardStyle,
-      padding: '20px',
+      padding: '12px 16px', // Reduced padding
       display: 'flex',
       alignItems: 'center',
-      gap: '16px',
+      gap: '12px', // Reduced gap
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      minHeight: '80px' // Enforce smaller height
     }}>
       <div style={{
         background: `${color}20`,
         color: color,
-        width: '50px',
-        height: '50px',
-        borderRadius: '12px',
+        width: '40px', // Smaller icon background
+        height: '40px',
+        borderRadius: '10px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: '24px'
+        fontSize: '20px' // Smaller icon size
       }}>
         {icon}
       </div>
       <div>
-        <div style={{ color: 'var(--text-secondary)', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
-        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff', marginTop: '4px' }}>{value}</div>
-        {subtext && <div style={{ fontSize: '11px', color: color, marginTop: '2px' }}>{subtext}</div>}
+        <div style={{ color: 'var(--text-secondary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
+        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff', marginTop: '2px' }}>{value}</div>
+        {subtext && <div style={{ fontSize: '10px', color: color, marginTop: '1px' }}>{subtext}</div>}
       </div>
       {/* Decorative Blur */}
       <div style={{
         position: 'absolute',
-        right: '-20px',
-        top: '-20px',
-        width: '100px',
-        height: '100px',
+        right: '-10px',
+        top: '-10px',
+        width: '60px',
+        height: '60px',
         background: color,
-        filter: 'blur(50px)',
+        filter: 'blur(30px)',
         opacity: 0.1,
         pointerEvents: 'none'
       }} />
@@ -120,47 +76,27 @@ export const Dashboard: React.FC<{
   return (
     <div className="animate-fadeIn">
       {/* Header Section */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '20px' }}>
         <div>
-          <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#fff', marginBottom: '2px' }}>
             Welcome Back, <span style={{ color: 'var(--gold)' }}>Mani Raja</span> 👋
           </h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Here's what's happening today.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Here's what's happening today.</p>
         </div>
-        <div style={{ textAlign: 'right', display: 'none', md: 'block' }}>
-          <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+
+        {/* Date Display */}
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
             {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </div>
-          <div style={{ color: 'var(--gold)', fontSize: '14px', fontWeight: '600' }}>
-            {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+          <div style={{ color: 'var(--gold)', fontSize: '12px', fontWeight: '600' }}>
+            {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
           </div>
         </div>
       </div>
 
-      {/* Quick Actions Row */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '32px', flexWrap: 'wrap' }}>
-        <QuickActionButton
-          label="New Order"
-          icon="➕"
-          color="#F5A623"
-          onClick={onViewOrders} // Triggers order list, usually user presses 'N' or FAB. We can wire this to open modal if passed down.
-        />
-        <QuickActionButton
-          label="New Enquiry"
-          icon="📝"
-          color="#3B82F6"
-          onClick={onViewEnquiries}
-        />
-        <QuickActionButton
-          label="Calendar"
-          icon="📅"
-          color="#8B5CF6"
-          onClick={() => { }} // Placeholder or navigation
-        />
-      </div>
-
-      {/* Stats Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+      {/* Stats Grid - Moved up and compacted */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px' }}>
         <StatCard
           label="Expec. Revenue"
           value={formatCurrency(orders.filter(o => o.eventDate === today).reduce((sum, o) => sum + o.totalAmount, 0))}

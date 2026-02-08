@@ -27,6 +27,8 @@
   --text-primary: #ffffff;
   --text-secondary: #b0b0c0;
   --text-muted: #6c757d;
+  --text-inverse: #1a1a2e;
+  /* Text color on gold background */
 
   /* Border & Shadows */
   --border: #3a3a5a;
@@ -36,6 +38,44 @@
   /* Spacing */
   --radius: 8px;
   --radius-lg: 12px;
+
+  /* Bar Styles (Theme-aware) */
+  --bar-bg: rgba(0, 0, 0, 0.4);
+  --bar-shadow: rgba(0, 0, 0, 0.3);
+
+  /* Page gradient */
+  --page-gradient: var(--dark);
+  --page-pattern: none;
+  --pattern-size: auto;
+}
+
+/* Light Mode Variables */
+.light-mode {
+  --dark: #e8eaef;
+  --dark-light: #f0f2f7;
+  --dark-lighter: #dfe1e8;
+
+  --text-primary: #2d2d2d;
+  --text-secondary: #555555;
+  --text-muted: #777777;
+  --text-inverse: #2d2d2d;
+
+  --border: #a5aab5;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.12), inset 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.18), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  /* Bar Styles (Light Theme) */
+  --bar-bg: rgba(255, 255, 255, 0.9);
+  --bar-shadow: rgba(0, 0, 0, 0.15);
+
+  /* Light gradient background with Color Splash effect */
+  --page-gradient: linear-gradient(180deg, #F9FAFB 0%, #F3F4F6 100%);
+  --page-pattern:
+    radial-gradient(circle at 15% 50%, rgba(255, 215, 0, 0.08) 0%, transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(69, 123, 157, 0.08) 0%, transparent 30%),
+    radial-gradient(circle at 50% 80%, rgba(230, 57, 70, 0.04) 0%, transparent 40%),
+    radial-gradient(circle at 80% 90%, rgba(255, 215, 0, 0.05) 0%, transparent 30%);
+  --pattern-size: 100% 100%;
 }
 
 * {
@@ -46,7 +86,8 @@
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--dark);
+  background: var(--page-pattern), var(--page-gradient);
+  background-size: var(--pattern-size);
   color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -93,6 +134,17 @@ a {
 }
 
 /* Utility Classes */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
 .card {
   background: var(--dark-light);
   border: 1px solid var(--border);
@@ -112,7 +164,7 @@ a {
 
 .btn-primary {
   background: var(--gold);
-  color: var(--dark);
+  color: var(--text-inverse);
 }
 
 .btn-primary:hover {
@@ -286,9 +338,9 @@ input::placeholder {
 
 .nav-item.active {
   background: var(--gold);
-  color: var(--dark);
+  color: var(--text-inverse);
 }
 
 .nav-item.active .nav-icon {
-  color: var(--dark);
+  color: var(--text-inverse);
 }

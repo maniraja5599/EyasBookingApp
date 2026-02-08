@@ -15,6 +15,31 @@ interface SettingsPanelProps {
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, orders, enquiries, cardStyle, btnPrimary, onSave, onRestoreData }) => {
     const [formData, setFormData] = useState(settings);
     const [newChargeHead, setNewChargeHead] = useState('');
+    const [newArtistName, setNewArtistName] = useState('');
+    const [newArtistPhone, setNewArtistPhone] = useState('');
+
+    const addArtist = () => {
+        if (newArtistName) {
+            const newArtist = {
+                id: Date.now().toString(),
+                name: newArtistName,
+                phone: newArtistPhone
+            };
+            setFormData({
+                ...formData,
+                makeupArtists: [...(formData.makeupArtists || []), newArtist]
+            });
+            setNewArtistName('');
+            setNewArtistPhone('');
+        }
+    };
+
+    const removeArtist = (id: string) => {
+        setFormData({
+            ...formData,
+            makeupArtists: (formData.makeupArtists || []).filter(a => a.id !== id)
+        });
+    };
 
     const inputStyle: React.CSSProperties = {
         width: '100%',
@@ -197,6 +222,117 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, orders, 
                         style={{ ...inputStyle, marginBottom: 0, flex: 1 }}
                     />
                     <button onClick={addChargeHead} style={{ ...btnPrimary, padding: '12px 20px' }}>Add</button>
+                </div>
+            </div>
+
+
+            {/* Function Types */}
+            <div style={{ ...cardStyle, marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px', color: 'var(--accent-color)' }}>🎉 Function Types</h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                    {(formData.functionTypes || []).map(type => (
+                        <span key={type} style={{ background: 'var(--bg-tertiary)', padding: '8px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+                            {type}
+                            <button onClick={() => setFormData({ ...formData, functionTypes: (formData.functionTypes || []).filter(t => t !== type) })} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer' }}>✕</button>
+                        </span>
+                    ))}
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                        type="text"
+                        placeholder="New Function Type"
+                        id="newFunctionType"
+                        style={{ ...inputStyle, marginBottom: 0, flex: 1 }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                const val = e.currentTarget.value.trim();
+                                if (val && !(formData.functionTypes || []).includes(val)) {
+                                    setFormData({ ...formData, functionTypes: [...(formData.functionTypes || []), val] });
+                                    e.currentTarget.value = '';
+                                }
+                            }
+                        }}
+                    />
+                    <button onClick={() => {
+                        const input = document.getElementById('newFunctionType') as HTMLInputElement;
+                        const val = input.value.trim();
+                        if (val && !(formData.functionTypes || []).includes(val)) {
+                            setFormData({ ...formData, functionTypes: [...(formData.functionTypes || []), val] });
+                            input.value = '';
+                        }
+                    }} style={{ ...btnPrimary, padding: '12px 20px' }}>Add</button>
+                </div>
+            </div>
+
+            {/* Pleat Types */}
+            <div style={{ ...cardStyle, marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px', color: 'var(--accent-color)' }}>👗 Pleat Types</h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                    {(formData.pleatTypes || []).map(type => (
+                        <span key={type} style={{ background: 'var(--bg-tertiary)', padding: '8px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+                            {type}
+                            <button onClick={() => setFormData({ ...formData, pleatTypes: (formData.pleatTypes || []).filter(t => t !== type) })} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer' }}>✕</button>
+                        </span>
+                    ))}
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                        type="text"
+                        placeholder="New Pleat Type"
+                        id="newPleatType"
+                        style={{ ...inputStyle, marginBottom: 0, flex: 1 }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                const val = e.currentTarget.value.trim();
+                                if (val && !(formData.pleatTypes || []).includes(val)) {
+                                    setFormData({ ...formData, pleatTypes: [...(formData.pleatTypes || []), val] });
+                                    e.currentTarget.value = '';
+                                }
+                            }
+                        }}
+                    />
+                    <button onClick={() => {
+                        const input = document.getElementById('newPleatType') as HTMLInputElement;
+                        const val = input.value.trim();
+                        if (val && !(formData.pleatTypes || []).includes(val)) {
+                            setFormData({ ...formData, pleatTypes: [...(formData.pleatTypes || []), val] });
+                            input.value = '';
+                        }
+                    }} style={{ ...btnPrimary, padding: '12px 20px' }}>Add</button>
+                </div>
+            </div>
+
+            {/* Makeup Artists */}
+            <div style={{ ...cardStyle, marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px', color: 'var(--accent-color)' }}>💄 Makeup Artists</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                    {(formData.makeupArtists || []).map(artist => (
+                        <div key={artist.id} style={{ background: 'var(--bg-tertiary)', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', border: '1px solid var(--border)' }}>
+                            <div>
+                                <span style={{ fontWeight: 'bold' }}>{artist.name}</span>
+                                <span style={{ color: 'var(--text-muted)', marginLeft: '8px' }}>{artist.phone}</span>
+                            </div>
+                            <button onClick={() => removeArtist(artist.id)} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: '4px' }}>✕</button>
+                        </div>
+                    ))}
+                    {(formData.makeupArtists || []).length === 0 && <p style={{ color: 'var(--text-muted)', fontSize: '12px', textAlign: 'center' }}>No makeup artists added yet.</p>}
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                        type="text"
+                        placeholder="Name"
+                        value={newArtistName}
+                        onChange={(e) => setNewArtistName(e.target.value)}
+                        style={{ ...inputStyle, marginBottom: 0, flex: 1 }}
+                    />
+                    <input
+                        type="tel"
+                        placeholder="Phone"
+                        value={newArtistPhone}
+                        onChange={(e) => setNewArtistPhone(e.target.value)}
+                        style={{ ...inputStyle, marginBottom: 0, flex: 1 }}
+                    />
+                    <button onClick={addArtist} style={{ ...btnPrimary, padding: '12px 20px' }}>Add</button>
                 </div>
             </div>
 

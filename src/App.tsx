@@ -24,6 +24,21 @@ const App: React.FC = () => {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [editingEnquiry, setEditingEnquiry] = useState<Enquiry | null>(null);
 
+  // Theme State
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem('eyas_theme');
+    return (saved as 'dark' | 'light') || 'dark';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('eyas_theme', theme);
+    if (theme === 'light') {
+      document.body.classList.add('light-mode');
+    } else {
+      document.body.classList.remove('light-mode');
+    }
+  }, [theme]);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [orders, setOrders] = useState<Order[]>(() => {
@@ -47,7 +62,8 @@ const App: React.FC = () => {
 
   const [settings, setSettings] = useState<Settings>(() => {
     const saved = localStorage.getItem('eyas_settings');
-    return saved ? JSON.parse(saved) : {
+    const parsed = saved ? JSON.parse(saved) : {};
+    return {
       businessName: 'Eyas Saree Drapist',
       phone: '',
       address: 'Namakkal',
@@ -55,7 +71,11 @@ const App: React.FC = () => {
       prePleatRate: 150,
       drapeRate: 500,
       bothRate: 600,
-      customChargeHeads: ['Travel', 'Urgent', 'Extra Pleats']
+      customChargeHeads: ['Travel', 'Urgent', 'Extra Pleats'],
+      functionTypes: ['Marriage', 'Baby Shower', 'Regular Use', 'Puberty Function', 'Guest Drape'],
+      pleatTypes: ['Box Folding', 'Pluffy Pleat', 'Center Pleat', 'Mermaid Drape', 'Cowboy Drape'],
+      makeupArtists: [], // Default empty list
+      ...parsed // Overwrite defaults with saved values, but keep defaults for missing keys
     };
   });
 
@@ -163,6 +183,7 @@ const App: React.FC = () => {
     borderRadius: 'var(--radius-lg)',
     padding: '16px',
     border: '1px solid var(--border)',
+    boxShadow: 'var(--shadow)',
     transition: 'all 0.2s ease',
   };
 
@@ -224,40 +245,26 @@ const App: React.FC = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#1a1a2e',
-      color: '#ffffff',
+      background: 'transparent',
+      color: 'var(--text-primary)',
       display: 'flex',
       flexDirection: 'column'
     }}>
       {/* Header - Modern Gradient with Glow */}
       <header style={{
-        background: 'var(--dark-light)',
+        background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f23 100%)',
+        backdropFilter: 'blur(10px)',
         padding: '12px 16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderBottom: '1px solid var(--border)',
+        borderBottom: '1px solid var(--gold)',
+        boxShadow: '0 4px 30px var(--bar-shadow)',
         position: 'sticky',
         top: 0,
         zIndex: 100,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            style={{
-              background: 'var(--dark-lighter)',
-              border: '1px solid var(--border)',
-              color: 'var(--text-primary)',
-              fontSize: '20px',
-              cursor: 'pointer',
-              display: 'block',
-              borderRadius: 'var(--radius)',
-              padding: '8px 12px',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            ☰
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <img
             src={logo}
             alt="Eyas Logo"
@@ -266,232 +273,301 @@ const App: React.FC = () => {
               height: '40px',
               borderRadius: '50%',
               objectFit: 'cover',
+              border: '2px solid var(--gold)',
             }}
           />
           <div>
             <h1 style={{
-              fontSize: '16px',
-              fontWeight: '700',
+              fontSize: '22px', // Reduced per request
+              fontWeight: 'bold',
               color: 'var(--gold)',
               margin: 0,
+              fontFamily: '"Kaushan Script", cursive',
+              letterSpacing: '0.5px',
             }}>
               Eyas Saree Drapist
             </h1>
-            <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0 }}>Namakkal</p>
+            <p style={{ fontSize: '10px', color: 'var(--text-secondary)', margin: 0, letterSpacing: '1px', textTransform: 'uppercase' }}>Namakkal</p>
           </div>
         </div>
-        <a
-          href="https://www.instagram.com/eyas_sareedrapist_namakkal/"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            color: 'var(--gold)',
-            fontSize: '22px',
-            textDecoration: 'none',
-          }}
-        >
-          📸
-        </a>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Theme Toggle */}
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              borderRadius: '50%',
+              width: '36px',
+              height: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '18px',
+              cursor: 'pointer',
+              color: 'var(--gold)',
+              transition: 'all 0.2s ease',
+            }}
+            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+
+          <button
+            onClick={() => {
+              setEditingOrder(null);
+              setShowOrderForm(true);
+            }}
+            style={{
+              background: 'var(--gold)',
+              color: 'var(--dark)',
+              border: 'none',
+              borderRadius: '50%',
+              width: '36px',
+              height: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+              padding: 0,
+            }}
+            title="New Order"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="var(--text-inverse)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M16 2V6" stroke="var(--text-inverse)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M8 2V6" stroke="var(--text-inverse)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M3 10H21" stroke="var(--text-inverse)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M12 14V18" stroke="var(--text-inverse)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M10 16H14" stroke="var(--text-inverse)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
       </header>
 
-      <div style={{ display: 'flex', flex: 1 }}>
-        {/* Sidebar - Glass Effect */}
-        <aside className="animate-slideIn" style={{
-          width: sidebarOpen ? '280px' : '0',
-          background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
-          borderRight: sidebarOpen ? '1px solid var(--border)' : 'none',
-          overflow: 'hidden',
-          transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          position: 'fixed',
-          top: '77px',
-          left: 0,
-          bottom: '70px',
-          zIndex: 90,
+      {/* Bottom Sheet Menu */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: '70px',
+            background: 'rgba(0,0,0,0.5)',
+            zIndex: 200,
+          }}
+        />
+      )}
+      <aside style={{
+        position: 'fixed',
+        left: 0,
+        right: 0,
+        bottom: sidebarOpen ? '70px' : '-100%',
+        zIndex: 210,
+        background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)',
+        borderTop: '1px solid var(--gold)',
+        borderRadius: '24px 24px 0 0',
+        boxShadow: '0 -8px 40px var(--bar-shadow)',
+        transition: 'bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        maxHeight: '40vh', // Reduced height per request
+        overflow: 'hidden',
+      }}>
+        {/* Handle Bar */}
+        <div style={{
           display: 'flex',
-          flexDirection: 'column',
-          boxShadow: sidebarOpen ? '4px 0 24px rgba(0,0,0,0.3)' : 'none',
+          justifyContent: 'center',
+          padding: '12px',
+          borderBottom: '1px solid var(--border)'
         }}>
-          <nav style={{ padding: '20px', flex: 1 }}>
-            {navItems.map(item => (
-              <button
-                key={item.id}
-                onClick={() => { setActiveTab(item.id as any); setSidebarOpen(false); }}
-                style={{
-                  width: '100%',
-                  padding: '16px 20px',
-                  background: activeTab === item.id ? 'linear-gradient(90deg, rgba(245, 166, 35, 0.15) 0%, transparent 100%)' : 'transparent',
-                  color: activeTab === item.id ? 'var(--gold)' : 'var(--text-secondary)',
-                  border: 'none',
-                  borderLeft: activeTab === item.id ? '4px solid var(--gold)' : '4px solid transparent',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '16px',
-                  fontSize: '15px',
-                  fontWeight: activeTab === item.id ? '600' : '500',
-                  marginBottom: '4px',
-                  textAlign: 'left',
-                  transition: 'all 0.2s ease',
-                  borderRadius: '0 8px 8px 0',
-                }}
-              >
-                <span style={{ fontSize: '20px' }}>{item.symbol}</span>
-                {item.label}
-              </button>
-            ))}
-          </nav>
-
-          {/* Developer Footer */}
           <div style={{
-            padding: '24px',
-            borderTop: '1px solid rgba(255,255,255,0.05)',
-            background: 'rgba(0,0,0,0.2)',
-          }}>
-            <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Designed & Developed by
-            </p>
-            <a
-              href="https://www.instagram.com/maniraja__/?hl=en"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                color: 'var(--gold)',
-                fontSize: '14px',
-                fontWeight: '600',
-                textDecoration: 'none',
-                marginBottom: '16px',
-              }}
-            >
-              <span>👨‍💻 Mani Raja</span>
-              <span style={{ fontSize: '12px' }}>↗</span>
-            </a>
+            width: '40px',
+            height: '4px',
+            background: 'var(--text-muted)',
+            borderRadius: '2px'
+          }} />
+        </div>
 
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-              © {new Date().getFullYear()} Eyas Saree Drapist.<br />
-              All rights reserved.
-            </div>
-          </div>
-        </aside>
-
-        {/* Overlay */}
-        {sidebarOpen && (
-          <div
+        {/* Menu Title */}
+        <div style={{
+          padding: '16px 24px',
+          borderBottom: '1px solid var(--border)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: 'var(--gold)' }}>Menu</h3>
+          <button
             onClick={() => setSidebarOpen(false)}
             style={{
-              position: 'fixed',
-              top: '77px',
-              left: '250px',
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0,0,0,0.5)',
-              zIndex: 80,
+              background: 'transparent',
+              border: 'none',
+              fontSize: '24px',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              padding: '4px',
+            }}
+          >✕</button>
+        </div>
+
+        {/* Menu Items - Grid Layout */}
+        <nav style={{ padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => { setActiveTab(item.id as any); setSidebarOpen(false); }}
+              style={{
+                padding: '12px 6px',
+                background: activeTab === item.id ? 'rgba(245, 166, 35, 0.15)' : 'var(--dark-lighter)',
+                color: activeTab === item.id ? 'var(--gold)' : 'var(--text-primary)',
+                border: activeTab === item.id ? '2px solid var(--gold)' : '1px solid var(--border)',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '11px',
+                fontWeight: activeTab === item.id ? '600' : '500',
+                borderRadius: '12px',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <span style={{ fontSize: '16px' }}>{item.symbol}</span>
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* Developer Footer */}
+        <div style={{
+          padding: '10px 16px',
+          borderTop: '1px solid rgba(245, 166, 35, 0.3)',
+          background: 'rgba(0,0,0,0.3)',
+          textAlign: 'center',
+        }}>
+          <a
+            href="https://www.instagram.com/maniraja__/?hl=en"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: 'var(--gold)',
+              fontSize: '11px',
+              fontWeight: '500',
+              textDecoration: 'none',
+            }}
+          >
+            Designed & Developed by <span style={{ fontWeight: '700', color: '#FFD54F' }}>Mani Raja</span>
+          </a>
+          <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
+            © {new Date().getFullYear()} Eyas Saree Drapist
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main style={{
+        flex: 1,
+        padding: '20px',
+        paddingBottom: '90px',
+        overflowY: 'auto',
+      }}>
+        {activeTab === 'dashboard' && (
+          <Dashboard
+            orders={orders}
+            enquiries={enquiries}
+            cardStyle={cardStyle}
+            onViewOrders={() => setActiveTab('orders')}
+            onViewEnquiries={() => setActiveTab('enquiries')}
+          />
+        )}
+
+        {activeTab === 'orders' && (
+          <OrderList
+            orders={orders}
+            settings={settings}
+            cardStyle={cardStyle}
+            btnPrimary={btnPrimary}
+            onEdit={(order) => { setEditingOrder(order); setShowOrderForm(true); }}
+            onDelete={(id) => setOrders(orders.filter(o => o.id !== id))}
+            onUpdateStatus={(id, status) => setOrders(orders.map(o => o.id === id ? { ...o, status } : o))}
+            onAddPayment={(id, payment) => {
+              setOrders(orders.map(o => {
+                if (o.id === id) {
+                  const newPayments = [...o.payments, payment];
+                  const newAmountPaid = newPayments.reduce((sum, p) => sum + p.amount, 0);
+                  return { ...o, payments: newPayments, amountPaid: newAmountPaid };
+                }
+                return o;
+              }));
             }}
           />
         )}
 
-        {/* Main Content */}
-        <main style={{
-          flex: 1,
-          padding: '20px',
-          paddingBottom: '90px',
-          overflowY: 'auto',
-        }}>
-          {activeTab === 'dashboard' && (
-            <Dashboard
-              orders={orders}
-              enquiries={enquiries}
-              cardStyle={cardStyle}
-              onViewOrders={() => setActiveTab('orders')}
-              onViewEnquiries={() => setActiveTab('enquiries')}
-            />
-          )}
+        {activeTab === 'enquiries' && (
+          <EnquiryList
+            enquiries={enquiries}
+            cardStyle={cardStyle}
+            btnPrimary={btnPrimary}
+            btnSecondary={btnSecondary}
+            onEdit={(enquiry) => { setEditingEnquiry(enquiry); setShowEnquiryForm(true); }}
+            onDelete={(id) => setEnquiries(enquiries.filter(e => e.id !== id))}
+            onConvert={(enquiry) => convertEnquiryToOrder(enquiry)}
+          />
+        )}
 
-          {activeTab === 'orders' && (
-            <OrderList
-              orders={orders}
-              settings={settings}
-              cardStyle={cardStyle}
-              btnPrimary={btnPrimary}
-              onEdit={(order) => { setEditingOrder(order); setShowOrderForm(true); }}
-              onDelete={(id) => setOrders(orders.filter(o => o.id !== id))}
-              onUpdateStatus={(id, status) => setOrders(orders.map(o => o.id === id ? { ...o, status } : o))}
-              onAddPayment={(id, payment) => {
-                setOrders(orders.map(o => {
-                  if (o.id === id) {
-                    const newPayments = [...o.payments, payment];
-                    const newAmountPaid = newPayments.reduce((sum, p) => sum + p.amount, 0);
-                    return { ...o, payments: newPayments, amountPaid: newAmountPaid };
-                  }
-                  return o;
-                }));
-              }}
-            />
-          )}
+        {activeTab === 'customers' && (
+          <CustomerReport
+            customers={customers}
+            orders={orders}
+            enquiries={enquiries}
+            cardStyle={cardStyle}
+            onViewOrder={(order) => {
+              setEditingOrder(order);
+              setShowOrderForm(true);
+            }}
+          />
+        )}
 
-          {activeTab === 'enquiries' && (
-            <EnquiryList
-              enquiries={enquiries}
-              cardStyle={cardStyle}
-              btnPrimary={btnPrimary}
-              btnSecondary={btnSecondary}
-              onEdit={(enquiry) => { setEditingEnquiry(enquiry); setShowEnquiryForm(true); }}
-              onDelete={(id) => setEnquiries(enquiries.filter(e => e.id !== id))}
-              onConvert={(enquiry) => convertEnquiryToOrder(enquiry)}
-            />
-          )}
+        {activeTab === 'referrals' && (
+          <ReferralReport customers={customers} cardStyle={cardStyle} />
+        )}
 
-          {activeTab === 'customers' && (
-            <CustomerReport
-              customers={customers}
-              orders={orders}
-              enquiries={enquiries}
-              cardStyle={cardStyle}
-              onViewOrder={(order) => {
-                setEditingOrder(order);
-                setShowOrderForm(true);
-              }}
-            />
-          )}
+        {activeTab === 'calendar' && (
+          <CalendarView
+            orders={orders}
+            enquiries={enquiries}
+            onEditOrder={(order) => { setEditingOrder(order); setShowOrderForm(true); }}
+            onEditEnquiry={(enquiry) => { setEditingEnquiry(enquiry); setShowEnquiryForm(true); }}
+            onDeleteOrder={(orderId) => setOrders(orders.filter(o => o.id !== orderId))}
+            onDeleteEnquiry={(enquiryId) => setEnquiries(enquiries.filter(e => e.id !== enquiryId))}
+            onNewBooking={(_date) => {
+              setEditingOrder(null);
+              setShowOrderForm(true);
+            }}
+          />
+        )}
 
-          {activeTab === 'referrals' && (
-            <ReferralReport customers={customers} cardStyle={cardStyle} />
-          )}
-
-          {activeTab === 'calendar' && (
-            <CalendarView
-              orders={orders}
-              enquiries={enquiries}
-              onEditOrder={(order) => { setEditingOrder(order); setShowOrderForm(true); }}
-              onEditEnquiry={(enquiry) => { setEditingEnquiry(enquiry); setShowEnquiryForm(true); }}
-              onDeleteOrder={(orderId) => setOrders(orders.filter(o => o.id !== orderId))}
-              onDeleteEnquiry={(enquiryId) => setEnquiries(enquiries.filter(e => e.id !== enquiryId))}
-              onNewBooking={(_date) => {
-                setEditingOrder(null);
-                setShowOrderForm(true);
-              }}
-            />
-          )}
-
-          {activeTab === 'settings' && (
-            <SettingsPanel
-              settings={settings}
-              orders={orders}
-              enquiries={enquiries}
-              cardStyle={cardStyle}
-              btnPrimary={btnPrimary}
-              onSave={setSettings}
-              onRestoreData={(data) => {
-                if (data.orders) setOrders(data.orders);
-                if (data.enquiries) setEnquiries(data.enquiries);
-                if (data.settings) setSettings(data.settings);
-              }}
-            />
-          )}
-        </main>
-      </div>
+        {activeTab === 'settings' && (
+          <SettingsPanel
+            settings={settings}
+            orders={orders}
+            enquiries={enquiries}
+            cardStyle={cardStyle}
+            btnPrimary={btnPrimary}
+            onSave={setSettings}
+            onRestoreData={(data) => {
+              if (data.orders) setOrders(data.orders);
+              if (data.enquiries) setEnquiries(data.enquiries);
+              if (data.settings) setSettings(data.settings);
+            }}
+          />
+        )}
+      </main>
 
       {/* Bottom Navigation - Clean Professional */}
       <nav style={{
@@ -499,88 +575,134 @@ const App: React.FC = () => {
         bottom: '0',
         left: '0',
         right: '0',
-        background: 'var(--dark-light)',
-        borderTop: '1px solid var(--border)',
+        background: 'linear-gradient(180deg, #0f0f23 0%, #1a1a2e 100%)',
+        borderTop: '1px solid var(--gold)',
+        boxShadow: '0 -4px 30px var(--bar-shadow)',
         display: 'flex',
-        justifyContent: 'space-around',
-        padding: '8px 0',
+        justifyContent: 'space-between',
+        padding: '8px 16px',
         zIndex: 100,
       }}>
-        {navItems.filter(i => ['dashboard', 'orders', 'enquiries', 'calendar'].includes(i.id)).map(item => (
-          <button
-            key={item.id}
-            onClick={() => setActiveTab(item.id as any)}
-            style={{
-              background: activeTab === item.id ? 'var(--gold)' : 'transparent',
-              border: 'none',
-              borderRadius: 'var(--radius)',
-              color: activeTab === item.id ? 'var(--dark)' : 'var(--text-secondary)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '4px',
-              cursor: 'pointer',
-              padding: '8px 12px',
-              flex: 1,
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <Icon symbol={item.symbol} size={24} />
-            <span style={{ fontSize: '10px', fontWeight: activeTab === item.id ? '600' : 'normal' }}>
-              {item.label}
-            </span>
-          </button>
-        ))}
+        {/* Left Group */}
+        {['dashboard', 'orders'].map(id => {
+          const item = navItems.find(i => i.id === id);
+          if (!item) return null;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id as any)}
+              style={{
+                background: activeTab === item.id ? 'var(--gold)' : 'transparent',
+                border: 'none',
+                borderRadius: 'var(--radius)',
+                color: activeTab === item.id ? 'var(--dark)' : 'var(--text-secondary)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+                padding: '8px 12px',
+                minWidth: '60px',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <Icon symbol={item.symbol} size={24} />
+              <span style={{ fontSize: '10px', fontWeight: activeTab === item.id ? '600' : 'normal' }}>
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
 
-        {/* Menu Button */}
+        {/* Center Menu Button */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           style={{
-            background: 'transparent',
-            border: 'none',
-            borderRadius: 'var(--radius)',
-            color: 'var(--text-secondary)',
+            background: sidebarOpen ? 'var(--gold)' : 'rgba(255,255,255,0.1)',
+            border: '1px solid var(--gold)',
+            borderRadius: '50%',
+            color: sidebarOpen ? 'var(--dark)' : 'var(--gold)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '4px',
+            justifyContent: 'center',
+            gap: '0',
             cursor: 'pointer',
-            padding: '8px 12px',
-            flex: 1,
-            transition: 'all 0.2s ease',
+            width: '56px',
+            height: '56px',
+            marginTop: '-28px', // Floating effect
+            boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
+            transform: sidebarOpen ? 'rotate(90deg)' : 'none',
+            transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            zIndex: 110,
           }}
         >
-          <Icon symbol="☰" size={24} />
-          <span style={{ fontSize: '10px' }}>Menu</span>
+          <Icon symbol={sidebarOpen ? "✕" : "☰"} size={26} />
         </button>
+
+        {/* Right Group */}
+        {['enquiries', 'calendar'].map(id => {
+          const item = navItems.find(i => i.id === id);
+          if (!item) return null;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id as any)}
+              style={{
+                background: activeTab === item.id ? 'var(--gold)' : 'transparent',
+                border: 'none',
+                borderRadius: 'var(--radius)',
+                color: activeTab === item.id ? 'var(--dark)' : 'var(--text-secondary)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+                padding: '8px 12px',
+                minWidth: '60px',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <Icon symbol={item.symbol} size={24} />
+              <span style={{ fontSize: '10px', fontWeight: activeTab === item.id ? '600' : 'normal' }}>
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+
       </nav>
 
 
 
       {/* Order Form Modal */}
-      {showOrderForm && (
-        <OrderForm
-          order={editingOrder}
-          settings={settings}
-          customers={customers}
-          setCustomers={setCustomers}
-          orders={orders}
-          onSave={handleSaveOrder}
-          onClose={() => { setShowOrderForm(false); setEditingOrder(null); }}
-        />
-      )}
+      {
+        showOrderForm && (
+          <OrderForm
+            order={editingOrder}
+            settings={settings}
+            customers={customers}
+            setCustomers={setCustomers}
+            orders={orders}
+            onSave={handleSaveOrder}
+            onClose={() => { setShowOrderForm(false); setEditingOrder(null); }}
+          />
+        )
+      }
 
       {/* Enquiry Form Modal */}
-      {showEnquiryForm && (
-        <EnquiryForm
-          enquiry={editingEnquiry}
-          customers={customers}
-          setCustomers={setCustomers}
-          enquiries={enquiries}
-          onSave={handleSaveEnquiry}
-          onClose={() => { setShowEnquiryForm(false); setEditingEnquiry(null); }}
-        />
-      )}
+      {
+        showEnquiryForm && (
+          <EnquiryForm
+            enquiry={editingEnquiry}
+            customers={customers}
+            setCustomers={setCustomers}
+            enquiries={enquiries}
+            onSave={handleSaveEnquiry}
+            onClose={() => { setShowEnquiryForm(false); setEditingEnquiry(null); }}
+          />
+        )
+      }
     </div>
   );
 };

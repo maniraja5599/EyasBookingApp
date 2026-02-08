@@ -61,7 +61,7 @@ export const Dashboard: React.FC<{
       <div style={{
         fontSize: '16px',
         fontWeight: 'bold',
-        color: '#fff',
+        color: 'var(--text-primary)',
         lineHeight: '1.2'
       }}>
         {value}
@@ -148,8 +148,8 @@ export const Dashboard: React.FC<{
         {/* Left Col: Today's Schedule Timeline */}
         <div className="glass-card" style={{ ...cardStyle, padding: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>📅 Today's Schedule</h3>
-            <span style={{ background: '#252542', color: 'var(--text-secondary)', padding: '4px 12px', borderRadius: '12px', fontSize: '12px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>📅 Today's Schedule</h3>
+            <span style={{ background: 'var(--dark-lighter)', color: 'var(--text-secondary)', padding: '4px 12px', borderRadius: '12px', fontSize: '12px' }}>
               {todayEvents.length} Events
             </span>
           </div>
@@ -201,7 +201,7 @@ export const Dashboard: React.FC<{
                   {/* Details */}
                   <div style={{ flex: 1, paddingBottom: '10px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <h4 style={{ fontSize: '16px', fontWeight: 'bold', color: '#fff' }}>{order.customerName}</h4>
+                      <h4 style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{order.customerName}</h4>
                       <div style={{
                         fontSize: '12px',
                         padding: '2px 8px',
@@ -232,7 +232,7 @@ export const Dashboard: React.FC<{
 
           {/* Pending Payments Alert */}
           {pendingOrders.filter(o => o.totalAmount > o.amountPaid).length > 0 && (
-            <div className="glass-card" style={{ ...cardStyle, background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05))', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+            <div className="glass-card" style={{ ...cardStyle, background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.08))', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#EF4444', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   ⚠️ Pending Payments

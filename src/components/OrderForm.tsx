@@ -13,10 +13,14 @@ interface OrderFormProps {
 }
 
 export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers, setCustomers, orders, onSave, onClose }) => {
+  // Steps: 1=Customer, 2=Service, 3=Dates, 4=Review, 5=Success
   const [step, setStep] = useState(order ? 2 : 1);
   const [isExistingCustomer, setIsExistingCustomer] = useState(false);
   const [permanentAddress, setPermanentAddress] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [referralSearchTerm, setReferralSearchTerm] = useState('');
+  const [showReferralSuggestions, setShowReferralSuggestions] = useState(false);
 
   const [formData, setFormData] = useState<Partial<Order>>(() => order || {
     customerName: '',
@@ -37,10 +41,53 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers
     amountPaid: 0,
     status: 'pending',
     notes: '',
+    // New Fields
+    functionType: '',
+    functionSubType: '',
+    pleatType: '',
+    measurementMethod: 'unknown',
+    measurements: {
+      bodyType: 'M',
+      height: 'normal',
+      palluHeight: 0,
+      innerRotation: 0,
+      bodyRotation: 0
+    }
   });
 
   const [newChargeName, setNewChargeName] = useState('');
   const [newChargeAmount, setNewChargeAmount] = useState('');
+
+  // Styles
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    background: 'var(--dark-lighter)',
+    border: '1px solid var(--border)',
+    padding: '10px',
+    borderRadius: '8px',
+    color: 'var(--text-primary)',
+    fontSize: '14px',
+    marginBottom: '10px',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    marginBottom: '4px',
+    fontSize: '13px',
+    color: 'var(--gold)',
+    fontWeight: 'bold',
+  };
+
+  const sectionTitleStyle: React.CSSProperties = {
+    fontSize: '16px',
+    color: 'var(--gold)',
+    marginBottom: '16px',
+    borderBottom: '1px solid var(--border)',
+    paddingBottom: '8px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  };
 
   useEffect(() => {
     calculateTotal();
@@ -76,59 +123,43 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers
     return total;
   };
 
-  const addCharge = () => {
-    if (newChargeName && newChargeAmount) {
-      const charges = [...(formData.additionalCharges || []), { name: newChargeName, amount: parseFloat(newChargeAmount) }];
-      setFormData(prev => ({ ...prev, additionalCharges: charges, totalAmount: (prev.baseAmount || 0) + charges.reduce((sum, c) => sum + c.amount, 0) }));
-      setNewChargeName('');
-      setNewChargeAmount('');
+  const handleNext = () => {
+    if (step === 1) {
+      if (!formData.customerName || !formData.phone) {
+        alert("Please enter Name and Phone");
+        return;
+      }
+      if (formData.phone.length < 10) {
+        alert("Please enter valid phone");
+        return;
+      }
+      setStep(2);
+    } else if (step === 2) {
+      setStep(3);
+    } else if (step === 3) {
+      if (!formData.eventDate) {
+        alert("Event Date is required");
+        return;
+      }
+      setStep(4);
+    } else if (step === 4) {
+      // Check confirmation or something? No, just proceed to save action
     }
   };
 
-  const removeCharge = (index: number) => {
-    const charges = (formData.additionalCharges || []).filter((_, i) => i !== index);
-    setFormData(prev => ({ ...prev, additionalCharges: charges, totalAmount: (prev.baseAmount || 0) + charges.reduce((sum, c) => sum + c.amount, 0) }));
+  const handleBack = () => {
+    if (step > 1) setStep(step - 1);
   };
 
-  const handlePhoneCheck = () => {
-    console.log('handlePhoneCheck called', formData.phone);
-    if (!formData.phone || formData.phone.length < 10) {
-      console.log('Phone invalid:', formData.phone);
-      alert("Please enter a valid phone number");
-      return;
-    }
-
-    const existing = customers.find(c => c.phone === formData.phone);
-    console.log('Existing customer found:', existing);
-
-    if (existing) {
-      setIsExistingCustomer(true);
-      setFormData(prev => ({ ...prev, customerName: existing.name }));
-      setPermanentAddress(existing.permanentAddress);
-    } else {
-      setIsExistingCustomer(false);
-      setPermanentAddress('');
-    }
-    setStep(2);
-    console.log('Set step to 2');
-  };
-
-  const handleSubmit = () => {
-    // Only validate name and phone. Address is optional depending on context.
-    if (!formData.customerName || !formData.phone) {
-      alert('Please fill in customer name and phone');
-      return;
-    }
-
+  const handleSave = () => {
     // Save/Update Customer
     const now = new Date().toISOString();
     if (!isExistingCustomer) {
-      // New Customer
       const newCustomer: Customer = {
         id: generateId(),
         name: formData.customerName!,
         phone: formData.phone!,
-        permanentAddress: permanentAddress, // Save the permanent address entered
+        permanentAddress: permanentAddress,
         createdAt: now,
         // @ts-ignore
         referralSource: formData.referralSource || 'instagram',
@@ -140,7 +171,6 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers
       setCustomers(prev => [...prev, newCustomer]);
     }
 
-    // Create new order object
     const newOrder = {
       ...formData,
       id: order ? order.id : generateId(),
@@ -148,878 +178,508 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers
     };
 
     onSave(newOrder as Order);
-    setStep(3); // Go to Success Step
+    setStep(5); // Success
   };
 
-  const handlePickContact = async () => {
-    try {
-      if (!('contacts' in navigator && 'ContactsManager' in window)) {
-        alert('Contact Picker is not supported on this device.');
-        return;
-      }
-      const props = ['name', 'tel'];
-      const opts = { multiple: false };
-      // @ts-ignore
-      const contacts = await navigator.contacts.select(props, opts);
-      if (contacts.length) {
-        const contact = contacts[0] as any;
-        const name = contact.name && contact.name.length ? contact.name[0] : '';
-        const phone = contact.tel && contact.tel.length ? contact.tel[0] : '';
-        setFormData(prev => ({
-          ...prev,
-          phone: phone.replace(/\s+/g, ''),
-          customerName: name || prev.customerName
-        }));
-      }
-    } catch (ex) { console.error(ex); }
+  // Helper to share whatsapp
+  const shareWhatsApp = () => {
+    const balance = (formData.totalAmount || 0) - (formData.amountPaid || 0);
+    const msg = `*Eyas Saree Drapist*\n` +
+      `Order for *${formData.customerName}*\n` +
+      `Event: ${formatDate(formData.eventDate || '')}\n` +
+      `Function: ${formData.functionType || 'N/A'}\n` +
+      `Service: ${formData.serviceType} (${formData.sareeCount} Sarees)\n` +
+      `Total: ${formatCurrency(formData.totalAmount || 0)}\n` +
+      `Advance: ${formatCurrency(formData.amountPaid || 0)}\n` +
+      `Balance: ${formatCurrency(balance)}\n\n` +
+      `Thank you!`;
+    window.open(`https://wa.me/${formData.phone}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    background: '#252542',
-    border: '1px solid #3a3a5a',
-    padding: '12px',
-    borderRadius: '8px',
-    color: '#ffffff',
-    fontSize: '16px',
-    marginBottom: '16px',
-  };
-
-  const labelStyle: React.CSSProperties = {
-    display: 'block',
-    marginBottom: '8px',
-    fontSize: '14px',
-    color: '#F5A623',
-    fontWeight: 'bold',
-  };
 
   return (
     <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0,0,0,0.8)',
-      backdropFilter: 'blur(5px)',
-      zIndex: 200,
-      overflow: 'auto',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px'
+      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+      background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)',
+      zIndex: 200, overflow: 'auto', display: 'flex',
+      alignItems: 'flex-start', justifyContent: 'center',
+      padding: '16px', paddingTop: '40px',
     }}>
-      <div style={{
-        background: '#1a1a2e',
-        width: '100%',
-        maxWidth: '600px',
+      <div className="no-scrollbar" style={{
+        background: step === 1 && !order ? 'transparent' : 'var(--dark-light)',
+        width: '100%', maxWidth: '360px',
         borderRadius: '16px',
-        padding: '24px',
-        maxHeight: '90vh',
-        overflowY: 'auto',
-        border: '1px solid rgba(255, 215, 0, 0.1)',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+        padding: step === 1 && !order ? '0' : '16px',
+        maxHeight: '90vh', overflowY: 'auto',
+        border: step === 1 && !order ? 'none' : '1px solid var(--gold)',
+        boxShadow: step === 1 && !order ? 'none' : '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{
-            fontSize: '24px',
-            fontWeight: 'bold',
-            background: 'var(--accent-gold)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}>
-            {order ? '✏️ Edit Order' : '➕ New Order'}
-          </h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-accent)', fontSize: '28px', cursor: 'pointer' }}>✕</button>
-        </div>
 
-        {/* STEP 1: SEARCH & IDENTIFY */}
-        {step === 1 && !order && (
-          <div className="animate-fadeIn" style={{ minHeight: '350px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
-              <h3 style={{ fontSize: '20px', color: '#fff', marginBottom: '8px' }}>Find Customer</h3>
-              <p style={{ color: '#aaa' }}>Search by Name or Phone Number</p>
+        {/* Header with Progress */}
+        {step !== 5 && (
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: 'var(--gold)' }}>
+                {order ? 'Edit Order' : 'New Order'}
+              </h2>
+              <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#888', fontSize: '20px', cursor: 'pointer' }}>✕</button>
             </div>
+            {/* Progress Bar */}
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {[1, 2, 3, 4].map(s => (
+                <div key={s} style={{
+                  flex: 1, height: '4px', borderRadius: '2px',
+                  background: s <= step ? 'var(--gold)' : '#333',
+                  transition: 'all 0.3s'
+                }} />
+              ))}
+            </div>
+          </div>
+        )}
 
-            <div style={{ position: 'relative', marginBottom: '24px' }}>
-              <label style={labelStyle}>Search Customer</label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input
-                  type="text"
-                  value={formData.phone || ''} // Using phone field as temporary search input
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setFormData(prev => ({ ...prev, phone: val, customerName: '' })); // Clear name when typing new search
-                  }}
-                  onFocus={() => {
-                    // If we have text, show suggestions
-                  }}
-                  placeholder="Type Name or Phone..."
-                  style={{ ...inputStyle, marginBottom: 0, fontSize: '18px' }}
-                  autoFocus
-                  autoComplete="off"
-                />
+        {/* STEP 1: CUSTOMER (Reused Logic) */}
+        {step === 1 && !order && (
+          <div className="animate-fadeIn">
+            {/* Spotlight Search Logic from previous version */}
+            <div style={{ position: 'relative', marginBottom: '12px' }}>
+              <label style={{ ...labelStyle, marginLeft: '16px' }}>Search Customer</label>
+              <input
+                type="text"
+                value={formData.phone || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value, customerName: '' }))}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                placeholder="Search Name or Phone..."
+                style={{ ...inputStyle, width: 'calc(100% - 12px)', borderRadius: '50px', padding: '12px 20px', marginLeft: '12px', border: '1px solid var(--gold)', boxShadow: '0 4px 15px rgba(0,0,0,0.5)' }}
+                autoFocus
+              />
+
+              {formData.phone && (
                 <button
-                  onClick={handlePickContact}
+                  onClick={() => setFormData(prev => ({ ...prev, phone: '', customerName: '', isExistingCustomer: false }))}
                   style={{
-                    padding: '12px',
-                    background: 'var(--bg-tertiary)',
-                    border: '1px solid #444',
-                    borderRadius: '8px',
-                    color: 'var(--accent-color)',
-                    cursor: 'pointer',
-                    height: '50px',
-                    width: '50px',
-                    fontSize: '24px',
+                    position: 'absolute',
+                    right: '12px',
+                    top: '38px',
+                    background: 'var(--border)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '24px',
+                    height: '24px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    fontSize: '12px'
                   }}
-                  title="Pick from Contacts"
                 >
-                  📒
+                  ✕
                 </button>
-              </div>
+              )}
 
               {/* Suggestions Dropdown */}
-              {formData.phone && formData.phone.length > 1 && !isExistingCustomer && (
+              {(isSearchFocused || (formData.phone && formData.phone.length > 1)) && !isExistingCustomer && (
                 <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  background: '#1e1e2e', // Solid background to avoid transparency issues
-                  border: '1px solid var(--gold)',
-                  borderRadius: '0 0 8px 8px',
-                  zIndex: 1000,
-                  maxHeight: '200px',
-                  overflowY: 'auto',
-                  boxShadow: '0 10px 25px rgba(0,0,0,0.8)',
-                  marginTop: '4px'
+                  position: 'absolute', top: '100%', left: 0, right: 0,
+                  background: 'var(--dark-light)', border: '1px solid var(--border)', borderRadius: '12px',
+                  zIndex: 1000, maxHeight: '300px', overflowY: 'auto', boxShadow: '0 10px 25px rgba(0,0,0,0.8)', marginTop: '8px',
+                  width: 'calc(100% - 12px)', marginLeft: '12px' // Align with input
                 }}>
-                  {customers
-                    .filter(c =>
-                      c.name.toLowerCase().includes((formData.phone || '').toLowerCase()) ||
-                      c.phone.includes(formData.phone || '')
-                    )
-                    .slice(0, 5)
-                    .map(customer => (
-                      <div
-                        key={customer.id}
-                        onClick={() => {
-                          setFormData(prev => ({
-                            ...prev,
-                            customerName: customer.name,
-                            phone: customer.phone,
-                            address: customer.permanentAddress // Pre-fill site address/permanent address logic needs care
-                          }));
-                          setIsExistingCustomer(true);
-                          setPermanentAddress(customer.permanentAddress);
-                          setStep(2);
-                        }}
-                        style={{
-                          padding: '12px',
-                          borderBottom: '1px solid #444',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          color: '#fff'
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)'}
-                        onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <div>
-                          <div style={{ fontWeight: 'bold' }}>{customer.name}</div>
-                          <div style={{ fontSize: '12px', color: '#aaa' }}>{customer.phone}</div>
-                        </div>
-                        <span style={{ fontSize: '18px' }}>➔</span>
-                      </div>
-                    ))
-                  }
-                  {/* Option to create new if it looks like a phone number */}
-                  {/^\d{10}$/.test(formData.phone || '') && (
-                    customers.find(c => c.phone === formData.phone) ? null : (
-                      <div
-                        onClick={handlePhoneCheck}
-                        style={{
-                          padding: '12px',
-                          cursor: 'pointer',
-                          color: 'var(--gold)',
-                          fontWeight: 'bold',
-                          textAlign: 'center',
-                          background: 'rgba(255, 255, 255, 0.05)'
-                        }}
-                      >
-                        + Create New Customer with this Phone
-                      </div>
-                    )
+                  {((formData.phone && formData.phone.length > 0)
+                    ? customers.filter(c => c.name.toLowerCase().includes((formData.phone || '').toLowerCase()) || c.phone.includes(formData.phone || '')).slice(0, 20)
+                    : [...customers].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5)
+                  ).map(customer => (
+                    <div key={customer.id}
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, customerName: customer.name, phone: customer.phone, address: customer.permanentAddress }));
+                        setIsExistingCustomer(true);
+                        setPermanentAddress(customer.permanentAddress);
+                        setStep(2);
+                      }}
+                      style={{ padding: '12px 12px 12px 20px', borderBottom: '1px solid var(--border)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', color: 'var(--text-primary)' }}>
+                      <div><div style={{ fontWeight: 'bold' }}>{customer.name}</div><div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{customer.phone}</div></div>
+                      <span>➔</span>
+                    </div>
+                  ))}
+
+                  {!formData.phone && (
+                    <div onClick={() => {
+                      // Clean reset
+                      setIsExistingCustomer(false);
+                      // Clear everything except phone if it's a number
+                      const ph = /^\d+$/.test(formData.phone || '') ? formData.phone : '';
+                      setFormData({
+                        customerName: '', phone: ph,
+                        address: '', serviceType: 'pre-pleat', location: 'shop', sareeCount: 1,
+                        sareeReceivedInAdvance: false, sareeReceivedDate: new Date().toISOString().split('T')[0],
+                        eventDate: '', deliveryDate: '', collectionDate: '', baseAmount: settings.prePleatRate, additionalCharges: [], totalAmount: settings.prePleatRate, payments: [], amountPaid: 0, status: 'pending', notes: '',
+                        measurementMethod: 'unknown', measurements: { bodyType: 'M', height: 'normal' }
+                      });
+                      // Just close suggestions by unfocusing? No, we need to show the form.
+                      // The form is explicitly shown below if !order and step===1.
+                      // But we want to hide the SEARCH results.
+                      setIsSearchFocused(false);
+                    }}
+                      style={{ padding: '12px', textAlign: 'center', color: 'var(--gold)', cursor: 'pointer', borderTop: '1px solid #333', fontWeight: 'bold' }}>
+                      + Create New Order
+                    </div>
                   )}
                 </div>
               )}
             </div>
 
-            {/* Only show 'Next' button if we manually want to proceed (e.g. typing a new number and clicking next) */}
-            <button
-              onClick={handlePhoneCheck}
-              style={{
-                width: '100%',
-                padding: '16px',
-                background: 'var(--gold)',
-                color: '#000',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '18px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                boxShadow: 'var(--shadow-glow)',
-                opacity: (formData.phone && formData.phone.length >= 3) ? 1 : 0.5,
-                pointerEvents: (formData.phone && formData.phone.length >= 3) ? 'auto' : 'none'
-              }}
-            >
-              Next ➔
-            </button>
-          </div>
-        )}
+            {/* Manual Entry Form (Visible always if not searching existing, or just below search) */}
+            <div style={{ background: 'var(--dark-light)', padding: '16px', borderRadius: '16px', border: '1px solid var(--border)' }}>
+              <h3 style={sectionTitleStyle}>👤 Customer Details</h3>
+              <label style={labelStyle}>Phone Number</label>
+              <input type="tel" value={formData.phone} onChange={e => {
+                setFormData({ ...formData, phone: e.target.value });
+                // Simple existence check
+                const exist = customers.find(c => c.phone === e.target.value);
+                if (exist) {
+                  setIsExistingCustomer(true);
+                  setFormData(prev => ({ ...prev, customerName: exist.name }));
+                  setPermanentAddress(exist.permanentAddress);
+                } else {
+                  setIsExistingCustomer(false);
+                }
+              }} style={inputStyle} placeholder="Phone Number" />
 
-        {/* STEP 2: DETAILS */}
-        {(step === 2 || order) && (
-          <div className="animate-fadeIn">
+              {isExistingCustomer && <div style={{ color: '#10B981', fontSize: '12px', marginBottom: '8px' }}>✓ Existing Customer Found</div>}
 
-            {/* Customer Status Banner */}
-            {!order && (
-              <div style={{
-                background: isExistingCustomer ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-                border: `1px solid ${isExistingCustomer ? '#10B981' : '#3B82F6'}`,
-                borderRadius: '8px',
-                padding: '12px',
-                marginBottom: '20px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
-                <div>
-                  <span style={{ fontSize: '18px', marginRight: '8px' }}>{isExistingCustomer ? '👋' : '🆕'}</span>
-                  <span style={{ color: '#fff', fontWeight: 'bold' }}>
-                    {isExistingCustomer ? 'Existing Customer' : 'New Customer'}
-                  </span>
-                  <div style={{ fontSize: '13px', color: '#aaa', marginTop: '4px' }}>
-                    {formData.phone}
-                  </div>
-                </div>
+              <label style={labelStyle}>Name</label>
+              <input type="text" value={formData.customerName} onChange={e => setFormData({ ...formData, customerName: e.target.value })} style={inputStyle} placeholder="Customer Name" />
 
-                {isExistingCustomer && (
-                  <button
-                    onClick={() => setShowHistory(!showHistory)}
-                    style={{
-                      background: 'var(--dark-lighter)',
-                      border: '1px solid #555',
-                      color: '#fff',
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '13px'
-                    }}
-                  >
-                    {showHistory ? 'Hide History' : '📜 View History'}
-                  </button>
-                )}
-              </div>
-            )}
+              {!isExistingCustomer && (
+                <>
+                  <label style={labelStyle}>Address (Optional)</label>
+                  <textarea value={permanentAddress} onChange={e => setPermanentAddress(e.target.value)} style={{ ...inputStyle, resize: 'none' }} rows={2} placeholder="Permanent Address" />
 
-            {/* History Section */}
-            {showHistory && (
-              <div style={{
-                background: '#111',
-                padding: '12px',
-                borderRadius: '8px',
-                marginBottom: '20px',
-                maxHeight: '200px',
-                overflowY: 'auto',
-                border: '1px solid #333'
-              }}>
-                <h4 style={{ color: 'var(--gold)', marginBottom: '8px', fontSize: '14px' }}>Previous Orders</h4>
-                {orders.filter(o => o.phone === formData.phone).length === 0 ? (
-                  <p style={{ color: '#666', fontSize: '13px' }}>No previous orders found.</p>
-                ) : (
-                  orders.filter(o => o.phone === formData.phone).map(o => (
-                    <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderBottom: '1px solid #222', fontSize: '13px', color: '#ccc' }}>
-                      <span>{formatDate(o.eventDate)}</span>
-                      <span>{o.serviceType}</span>
-                      <span style={{ color: 'var(--accent-color)' }}>{formatCurrency(o.totalAmount)}</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-
-            <label style={labelStyle}>Customer Name *</label>
-            <input
-              type="text"
-              value={formData.customerName}
-              onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-              placeholder="Enter customer name"
-              style={inputStyle}
-            />
-
-            {/* Permanent Address - Only for NEW customers */}
-            {!isExistingCustomer && !order && (
-              <div className="animate-fadeIn">
-                <label style={labelStyle}>Permanent Address * (First Time Only)</label>
-                <textarea
-                  value={permanentAddress}
-                  onChange={(e) => setPermanentAddress(e.target.value)}
-                  placeholder="Enter home/permanent address..."
-                  rows={2}
-                  style={{ ...inputStyle, resize: 'vertical', border: '1px dashed #555' }}
-                />
-                <small style={{ display: 'block', color: '#666', marginBottom: '16px', marginTop: '-12px' }}>
-                  This address will be saved for future bookings.
-                </small>
-
-                {/* REFERRAL SECTION */}
-                <div style={{ padding: '16px', background: 'rgba(255, 215, 0, 0.05)', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px' }}>
-                  <h4 style={{ color: 'var(--gold)', marginBottom: '12px', fontSize: '14px' }}>📢 Referral Source (How did they find us?)</h4>
-
-                  <select
-                    value={(formData as any).referralSource || 'instagram'}
-                    onChange={(e) => setFormData(prev => ({ ...prev, referralSource: e.target.value } as any))}
-                    style={inputStyle}
-                  >
-                    <option value="instagram">📱 Instagram / Social Media</option>
-                    <option value="customer">👤 Referred by Existing Customer</option>
-                    <option value="makeup_artist">💄 Makeup Artist Reference</option>
-                    <option value="other">⚪ Other / Walk-in</option>
+                  <label style={labelStyle}>Referral Source</label>
+                  <select value={(formData as any).referralSource || 'instagram'} onChange={e => {
+                    const source = e.target.value;
+                    setFormData({ ...formData, referralSource: source } as any);
+                    if (source !== 'customer') {
+                      setReferralSearchTerm('');
+                    }
+                  }} style={inputStyle}>
+                    <option value="instagram">Instagram</option>
+                    <option value="customer">Customer Ref</option>
+                    <option value="makeup_artist">Makeup Artist</option>
+                    <option value="other">Other</option>
                   </select>
 
-                  {/* Makeup Artist Details */}
+                  {/* Makeup Artist Selection */}
                   {(formData as any).referralSource === 'makeup_artist' && (
-                    <div className="animate-fadeIn" style={{ marginLeft: '12px', paddingLeft: '12px', borderLeft: '2px solid var(--purple)' }}>
-                      <input
-                        type="text"
-                        placeholder="Makeup Artist Name"
-                        value={(formData as any).makeupArtistDetails?.name || ''}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          makeupArtistDetails: { ...(prev as any).makeupArtistDetails, name: e.target.value }
-                        } as any))}
-                        style={{ ...inputStyle, marginBottom: '8px' }}
-                      />
-                      <input
-                        type="tel"
-                        placeholder="MUA Phone Number"
-                        value={(formData as any).makeupArtistDetails?.phone || ''}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          makeupArtistDetails: { ...(prev as any).makeupArtistDetails, phone: e.target.value }
-                        } as any))}
-                        style={{ ...inputStyle, marginBottom: '8px' }}
-                      />
-                      <input
-                        type="text"
-                        placeholder="Instagram ID (Optional)"
-                        value={(formData as any).makeupArtistDetails?.instagram || ''}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          makeupArtistDetails: { ...(prev as any).makeupArtistDetails, instagram: e.target.value }
-                        } as any))}
-                        style={{ ...inputStyle, marginBottom: '0' }}
-                      />
-                    </div>
+                    <select
+                      value={(formData as any).makeupArtistDetails?.name || ''}
+                      onChange={e => {
+                        const artist = settings.makeupArtists.find(a => a.name === e.target.value);
+                        if (artist) {
+                          setFormData({ ...formData, makeupArtistDetails: { name: artist.name, phone: artist.phone } } as any);
+                        }
+                      }}
+                      style={{ ...inputStyle, marginTop: '-8px' }}
+                    >
+                      <option value="">Select Makeup Artist</option>
+                      {(settings.makeupArtists || []).map(a => (
+                        <option key={a.id} value={a.name}>{a.name}</option>
+                      ))}
+                    </select>
                   )}
 
                   {/* Customer Referral Search */}
                   {(formData as any).referralSource === 'customer' && (
-                    <div className="animate-fadeIn">
+                    <div style={{ position: 'relative', marginTop: '-8px', marginBottom: '16px', zIndex: 20 }}>
                       <input
                         type="text"
-                        placeholder="Search Referring Customer Name/Phone..."
-                        onChange={(e) => {
-                          // Set a temporary search state for referrer
-                          // For simplicity, we might need a local state here. 
-                          // Let's rely on basic text input for now or implement a mini-search.
-                          // Given complexity, let's use a simple dropdown of customers if list isn't huge, 
-                          // or just a text field that searches.
-                          setFormData(prev => ({ ...prev, tempReferrerSearch: e.target.value } as any));
+                        placeholder="Search Customer (Name/Phone)"
+                        value={referralSearchTerm}
+                        onChange={e => {
+                          setReferralSearchTerm(e.target.value);
+                          setShowReferralSuggestions(true);
                         }}
-                        value={(formData as any).tempReferrerSearch || ''}
-                        style={{ ...inputStyle, marginBottom: '4px' }}
+                        onFocus={() => setShowReferralSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowReferralSuggestions(false), 200)}
+                        style={{ ...inputStyle, marginBottom: 0 }}
                       />
-                      {/* Mini-Suggestions for Referrer */}
-                      {(formData as any).tempReferrerSearch && (
-                        <div style={{ background: '#252542', border: '1px solid #444', borderRadius: '4px', maxHeight: '100px', overflowY: 'auto' }}>
-                          {customers
-                            .filter(c => c.name.toLowerCase().includes(((formData as any).tempReferrerSearch || '').toLowerCase()))
-                            .slice(0, 3)
-                            .map(c => (
-                              <div
-                                key={c.id}
-                                style={{ padding: '8px', borderBottom: '1px solid #333', cursor: 'pointer', fontSize: '13px' }}
-                                onClick={() => setFormData(prev => ({
-                                  ...prev,
-                                  referredByCustomerId: c.id,
-                                  tempReferrerSearch: `${c.name} (${c.phone})` // Display selected
-                                } as any))}
-                              >
-                                {c.name} ({c.phone})
-                              </div>
-                            ))
-                          }
+                      {showReferralSuggestions && referralSearchTerm && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          backgroundColor: 'var(--bg-secondary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '8px',
+                          maxHeight: '200px',
+                          overflowY: 'auto',
+                          zIndex: 10,
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                        }}>
+                          {customers.filter(c =>
+                            c.name.toLowerCase().includes(referralSearchTerm.toLowerCase()) ||
+                            c.phone.includes(referralSearchTerm)
+                          ).slice(0, 5).map(c => (
+                            <div
+                              key={c.id}
+                              onClick={() => {
+                                setFormData({ ...formData, referredByCustomerId: c.id } as any);
+                                setReferralSearchTerm(`${c.name} (${c.phone})`);
+                                setShowReferralSuggestions(false);
+                              }}
+                              style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', cursor: 'pointer' }}
+                            >
+                              <div style={{ fontWeight: 'bold' }}>{c.name}</div>
+                              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{c.phone}</div>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
                   )}
-                </div>
-              </div>
-            )}
+                </>
+              )}
 
-            <label style={labelStyle}>Service Type</label>
+              <button onClick={handleNext} style={{ width: '100%', padding: '12px', background: 'var(--gold)', border: 'none', borderRadius: '8px', fontWeight: 'bold', marginTop: '8px', cursor: 'pointer' }}>
+                Next: Service Details ➔
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: SERVICE DETAILS */}
+        {step === 2 && (
+          <div className="animate-fadeIn">
+            <h3 style={sectionTitleStyle}>👗 Service Details</h3>
+
+            {/* Function Type */}
+            <label style={labelStyle}>Function Type</label>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              <select
+                value={formData.functionType || ''}
+                onChange={e => setFormData({ ...formData, functionType: e.target.value })}
+                style={{ ...inputStyle, marginBottom: 0 }}
+              >
+                <option value="">Select Function</option>
+                {(settings.functionTypes || ['Marriage', 'Baby Shower', 'Guest Drape']).map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+              {/* Sub Type for Marriage */}
+              {formData.functionType === 'Marriage' && (
+                <select
+                  value={formData.functionSubType || ''}
+                  onChange={e => setFormData({ ...formData, functionSubType: e.target.value })}
+                  style={{ ...inputStyle, marginBottom: 0 }}
+                >
+                  <option value="">Who?</option>
+                  <option value="Self">Bride</option>
+                  <option value="Relative">Relative</option>
+                </select>
+              )}
+            </div>
+
+            {/* Pleat Type */}
+            <label style={labelStyle}>Pleat Type</label>
             <select
-              value={formData.serviceType}
-              onChange={(e) => setFormData({ ...formData, serviceType: e.target.value as any })}
+              value={formData.pleatType || ''}
+              onChange={e => setFormData({ ...formData, pleatType: e.target.value })}
               style={inputStyle}
             >
-              <option value="pre-pleat">Pre-Pleat Only</option>
-              <option value="drape">Draping Only</option>
-              <option value="both">Pre-Pleat + Draping</option>
+              <option value="">Select Pleat Style</option>
+              {(settings.pleatTypes || ['Box Folding']).map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
             </select>
 
-            <label style={labelStyle}>Location</label>
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-              <button
-                onClick={() => setFormData({ ...formData, location: 'shop' })}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: '2px solid',
-                  borderColor: formData.location === 'shop' ? 'var(--gold)' : 'var(--border)',
-                  background: formData.location === 'shop' ? 'var(--gold)' : 'transparent',
-                  color: formData.location === 'shop' ? 'var(--dark)' : 'var(--text-primary)',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  transition: 'all 0.2s',
-                }}
-              >
-                🏪 At Shop
-              </button>
-              <button
-                onClick={() => setFormData({ ...formData, location: 'onsite' })}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: '2px solid',
-                  borderColor: formData.location === 'onsite' ? 'var(--gold)' : 'var(--border)',
-                  background: formData.location === 'onsite' ? 'var(--gold)' : 'transparent',
-                  color: formData.location === 'onsite' ? 'var(--dark)' : 'var(--text-primary)',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  transition: 'all 0.2s',
-                }}
-              >
-                📍 On-Site
-              </button>
-            </div>
-
-            {/* Site Address Logic */}
-            {formData.location === 'onsite' && (
-              <div className="animate-fadeIn">
-                <label style={labelStyle}>Site Address / Draping Location</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                  {!isExistingCustomer && permanentAddress && (
-                    <button
-                      onClick={() => setFormData({ ...formData, address: permanentAddress })}
-                      style={{ alignSelf: 'flex-start', fontSize: '12px', padding: '4px 8px', background: '#333', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                    >
-                      ⬇ Copy Permanent Address
-                    </button>
-                  )}
-                  <textarea
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    placeholder="Where is the event? (e.g. Mandapam name, Hotel, or Home)"
-                    rows={2}
-                    style={inputStyle}
-                  />
-                </div>
-              </div>
-            )}
-
+            {/* Saree Count */}
             <label style={labelStyle}>Number of Sarees</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-              <button
-                onClick={() => setFormData(prev => ({ ...prev, sareeCount: Math.max(1, (prev.sareeCount || 1) - 1) }))}
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  border: '1px solid var(--border)',
-                  background: 'var(--dark-lighter)',
-                  color: 'var(--text-primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  fontSize: '18px',
-                  transition: 'all 0.2s'
-                }}
-              >
-                -
-              </button>
-              <input
-                type="number"
-                value={formData.sareeCount}
-                onChange={(e) => setFormData({ ...formData, sareeCount: parseInt(e.target.value) || 1 })}
-                min="1"
-                style={{
-                  ...inputStyle,
-                  width: '80px',
-                  textAlign: 'center',
-                  marginBottom: 0,
-                  fontSize: '18px',
-                  fontWeight: 'bold',
-                  background: 'transparent',
-                  border: 'none',
-                  borderBottom: '2px solid var(--gold)'
-                }}
-              />
-              <button
-                onClick={() => setFormData(prev => ({ ...prev, sareeCount: (prev.sareeCount || 1) + 1 }))}
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  border: '1px solid var(--border)',
-                  background: 'var(--gold)',
-                  color: 'var(--dark)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  fontSize: '18px',
-                  fontWeight: 'bold',
-                  transition: 'all 0.2s'
-                }}
-              >
-                +
-              </button>
+              <button onClick={() => setFormData(prev => ({ ...prev, sareeCount: Math.max(1, (prev.sareeCount || 1) - 1) }))} style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid var(--border)', background: 'var(--dark-lighter)', color: 'var(--text-primary)', fontSize: '18px', cursor: 'pointer' }}>-</button>
+              <span style={{ fontSize: '20px', fontWeight: 'bold', width: '40px', textAlign: 'center', color: 'var(--text-primary)' }}>{formData.sareeCount}</span>
+              <button onClick={() => setFormData(prev => ({ ...prev, sareeCount: (prev.sareeCount || 1) + 1 }))} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', background: 'var(--gold)', color: 'var(--dark)', fontSize: '18px', cursor: 'pointer' }}>+</button>
             </div>
 
-            <label style={labelStyle}>Saree Received Status</label>
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-              <button
-                onClick={() => setFormData({ ...formData, sareeReceivedInAdvance: true })}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: '2px solid',
-                  borderColor: formData.sareeReceivedInAdvance ? '#10B981' : 'var(--border-color)',
-                  background: formData.sareeReceivedInAdvance ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
-                  color: formData.sareeReceivedInAdvance ? '#10B981' : 'var(--text-primary)',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                }}
-              >
-                ✅ In Advance
-              </button>
-              <button
-                onClick={() => setFormData({ ...formData, sareeReceivedInAdvance: false, sareeReceivedDate: '' })}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: '2px solid',
-                  borderColor: !formData.sareeReceivedInAdvance ? '#F59E0B' : 'var(--border-color)',
-                  background: !formData.sareeReceivedInAdvance ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                  color: !formData.sareeReceivedInAdvance ? '#F59E0B' : 'var(--text-primary)',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                }}
-              >
-                📍 On-Site
-              </button>
-            </div>
-
-            {formData.sareeReceivedInAdvance && (
-              <div className="animate-fadeIn" style={{ marginBottom: '16px', padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px dashed #444' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: formData.sareeReceivedDate ? '12px' : '0' }}>
-                  <input
-                    type="checkbox"
-                    id="receivedCheck"
-                    checked={!!formData.sareeReceivedDate}
-                    onChange={(e) => {
-                      if (e.target.checked) setFormData({ ...formData, sareeReceivedDate: new Date().toISOString().split('T')[0] });
-                      else setFormData({ ...formData, sareeReceivedDate: '' });
-                    }}
-                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: 'var(--gold)' }}
-                  />
-                  <label htmlFor="receivedCheck" style={{ color: '#fff', cursor: 'pointer', fontSize: '15px' }}>
-                    Sarees Received Today?
-                  </label>
-                </div>
-
-                {formData.sareeReceivedDate && (
-                  <div className="animate-fadeIn">
-                    <label style={{ ...labelStyle, fontSize: '12px', color: '#aaa' }}>Date Received</label>
-                    <input
-                      type="date"
-                      value={formData.sareeReceivedDate}
-                      onChange={(e) => setFormData({ ...formData, sareeReceivedDate: e.target.value })}
-                      style={inputStyle}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Event Date Toggle */}
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <input
-                  type="checkbox"
-                  id="eventDateCheck"
-                  checked={!!formData.eventDate}
-                  onChange={(e) => {
-                    if (e.target.checked) setFormData({ ...formData, eventDate: new Date().toISOString().split('T')[0] });
-                    else setFormData({ ...formData, eventDate: '' });
+            {/* Service Type */}
+            <label style={labelStyle}>Service</label>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              {['pre-pleat', 'drape', 'both'].map(s => (
+                <button key={s}
+                  onClick={() => setFormData({ ...formData, serviceType: s as any })}
+                  style={{
+                    flex: 1, padding: '8px', borderRadius: '6px',
+                    border: formData.serviceType === s ? '2px solid var(--gold)' : '1px solid var(--border)',
+                    background: formData.serviceType === s ? 'rgba(255,215,0,0.1)' : 'transparent',
+                    color: formData.serviceType === s ? 'var(--gold)' : 'var(--text-secondary)',
+                    textTransform: 'capitalize', cursor: 'pointer'
                   }}
-                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: 'var(--gold)' }}
-                />
-                <label htmlFor="eventDateCheck" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>Event Date</label>
-              </div>
-              {formData.eventDate && (
-                <input
-                  type="date"
-                  value={formData.eventDate}
-                  onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-                  style={inputStyle}
-                />
-              )}
-            </div>
-
-            {/* Delivery Date Toggle */}
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <input
-                  type="checkbox"
-                  id="deliveryDateCheck"
-                  checked={!!formData.deliveryDate}
-                  onChange={(e) => {
-                    if (e.target.checked) setFormData({ ...formData, deliveryDate: new Date().toISOString().split('T')[0] });
-                    else setFormData({ ...formData, deliveryDate: '' });
-                  }}
-                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: 'var(--gold)' }}
-                />
-                <label htmlFor="deliveryDateCheck" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>Delivery Date</label>
-              </div>
-              {formData.deliveryDate && (
-                <input
-                  type="date"
-                  value={formData.deliveryDate}
-                  onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}
-                  style={inputStyle}
-                />
-              )}
-            </div>
-
-            {/* Pricing */}
-            <div className="glass-card" style={{ background: 'var(--glass-bg)', padding: '16px', borderRadius: 'var(--radius-lg)', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
-              <h3 style={{
-                background: 'var(--gold)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                marginBottom: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold'
-              }}>💰 Pricing</h3>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <span>Base Amount ({formData.sareeCount} × ₹{formData.serviceType === 'pre-pleat' ? settings.prePleatRate : formData.serviceType === 'drape' ? settings.drapeRate : settings.bothRate})</span>
-                <span style={{ fontWeight: 'bold' }}>{formatCurrency(formData.baseAmount || 0)}</span>
-              </div>
-
-              {(formData.additionalCharges || []).map((charge, index) => (
-                <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <span>{charge.name}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>{formatCurrency(charge.amount)}</span>
-                    <button onClick={() => removeCharge(index)} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer' }}>✕</button>
-                  </div>
-                </div>
+                >
+                  {s.replace('-', ' ')}
+                </button>
               ))}
+            </div>
 
-              {/* Add charge */}
-              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '12px', marginTop: '12px', marginBottom: '16px' }}>
-                <label style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Add Extra Charge</label>
-                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                  <select
-                    value={newChargeName}
-                    onChange={(e) => setNewChargeName(e.target.value)}
-                    style={{ flex: 2, background: 'var(--bg-secondary)', border: '1px solid #444', padding: '10px', borderRadius: '6px', color: 'var(--text-primary)' }}
-                  >
-                    <option value="">Select charge</option>
-                    {settings.customChargeHeads.map(head => (
-                      <option key={head} value={head}>{head}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="number"
-                    value={newChargeAmount}
-                    onChange={(e) => setNewChargeAmount(e.target.value)}
-                    placeholder="₹"
-                    style={{ flex: 1, background: 'var(--bg-secondary)', border: '1px solid #444', padding: '10px', borderRadius: '6px', color: 'var(--text-primary)' }}
-                  />
-                  <button onClick={addCharge} style={{ background: 'var(--accent-color)', color: 'var(--bg-primary)', border: 'none', padding: '10px 16px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>+</button>
+            {/* Measurements */}
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', border: '1px dashed #444' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <label style={{ ...labelStyle, marginBottom: 0 }}>Measurements</label>
+                <div style={{ display: 'flex', background: '#333', borderRadius: '20px', padding: '2px' }}>
+                  <button
+                    onClick={() => setFormData({ ...formData, measurementMethod: 'unknown' })}
+                    style={{ padding: '4px 12px', borderRadius: '18px', border: 'none', background: formData.measurementMethod === 'unknown' ? 'var(--gold)' : 'transparent', color: formData.measurementMethod === 'unknown' ? '#000' : '#888', fontSize: '11px', cursor: 'pointer' }}>
+                    Basic
+                  </button>
+                  <button
+                    onClick={() => setFormData({ ...formData, measurementMethod: 'known' })}
+                    style={{ padding: '4px 12px', borderRadius: '18px', border: 'none', background: formData.measurementMethod === 'known' ? 'var(--gold)' : 'transparent', color: formData.measurementMethod === 'known' ? '#000' : '#888', fontSize: '11px', cursor: 'pointer' }}>
+                    Advanced
+                  </button>
                 </div>
               </div>
 
-              {/* Advance Payment */}
-              <div style={{ marginBottom: '12px', borderTop: '1px solid #444', paddingTop: '12px' }}>
-                <label style={{ ...labelStyle, color: '#10B981' }}>Advance Paid</label>
-                <input
-                  type="number"
-                  value={formData.amountPaid}
-                  onChange={(e) => setFormData({ ...formData, amountPaid: parseFloat(e.target.value) || 0 })}
-                  placeholder="Enter advance amount"
-                  style={{ ...inputStyle, borderColor: '#10B981', color: '#10B981', fontWeight: 'bold' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #444', fontWeight: 'bold', fontSize: '18px' }}>
-                <span>Total</span>
-                <span style={{ color: 'var(--accent-color)' }}>{formatCurrency(formData.totalAmount || 0)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '16px', color: '#aaa' }}>
-                <span>Balance Due</span>
-                <span style={{ color: (formData.totalAmount || 0) - (formData.amountPaid || 0) > 0 ? '#EF4444' : '#10B981' }}>
-                  {formatCurrency((formData.totalAmount || 0) - (formData.amountPaid || 0))}
-                </span>
-              </div>
+              {formData.measurementMethod === 'known' ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <div>
+                    <label style={{ fontSize: '11px', color: '#aaa' }}>Pallu Height (In)</label>
+                    <input type="number"
+                      value={formData.measurements?.palluHeight || ''}
+                      onChange={e => setFormData({ ...formData, measurements: { ...formData.measurements, palluHeight: parseFloat(e.target.value) } })}
+                      style={inputStyle} placeholder="0.0" />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', color: '#aaa' }}>Inner Rotation (In)</label>
+                    <input type="number"
+                      value={formData.measurements?.innerRotation || ''}
+                      onChange={e => setFormData({ ...formData, measurements: { ...formData.measurements, innerRotation: parseFloat(e.target.value) } })}
+                      style={inputStyle} placeholder="0.0" />
+                  </div>
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ fontSize: '11px', color: '#aaa' }}>Body Rotation (In)</label>
+                    <input type="number"
+                      value={formData.measurements?.bodyRotation || ''}
+                      onChange={e => setFormData({ ...formData, measurements: { ...formData.measurements, bodyRotation: parseFloat(e.target.value) } })}
+                      style={inputStyle} placeholder="0.0" />
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '11px', color: '#aaa' }}>Body Size</label>
+                    <select
+                      value={formData.measurements?.bodyType || 'M'}
+                      onChange={e => setFormData({ ...formData, measurements: { ...formData.measurements, bodyType: e.target.value as any } })}
+                      style={inputStyle}
+                    >
+                      {['S', 'M', 'L', 'XL', 'XXL'].map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '11px', color: '#aaa' }}>Height</label>
+                    <select
+                      value={formData.measurements?.height || 'normal'}
+                      onChange={e => setFormData({ ...formData, measurements: { ...formData.measurements, height: e.target.value as any } })}
+                      style={inputStyle}
+                    >
+                      <option value="small">Low Height</option>
+                      <option value="normal">Normal</option>
+                      <option value="tall">Tall</option>
+                    </select>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <label style={labelStyle}>Notes</label>
-            <textarea
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Add any notes..."
-              rows={3}
-              style={{ ...inputStyle, resize: 'vertical' }}
-            />
-
-            {/* Button Actions */}
-            <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-              <button
-                onClick={onClose}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  background: 'var(--dark-lighter)',
-                  color: 'var(--text-secondary)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius)',
-                  fontSize: '15px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  transition: 'all 0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--text-muted)'}
-                onMouseOut={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                style={{
-                  flex: 2,
-                  padding: '14px',
-                  background: 'var(--gold)',
-                  color: 'var(--dark)',
-                  border: 'none',
-                  borderRadius: 'var(--radius)',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  boxShadow: 'var(--shadow)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
-                }}
-              >
-                {order ? 'Update Order' : 'Create Order'} ➔
-              </button>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
+              <button onClick={handleBack} style={{ flex: 1, padding: '12px', background: 'var(--dark-lighter)', border: 'none', borderRadius: '8px', color: 'var(--text-primary)', cursor: 'pointer' }}>Back</button>
+              <button onClick={handleNext} style={{ flex: 2, padding: '12px', background: 'var(--gold)', border: 'none', borderRadius: '8px', color: 'var(--dark)', fontWeight: 'bold', cursor: 'pointer' }}>Next: Dates ➔</button>
             </div>
           </div>
         )}
 
-        {/* STEP 3: SUCCESS & SHARE */}
+        {/* STEP 3: DATES */}
         {step === 3 && (
-          <div className="animate-fadeIn" style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🎉</div>
-            <h3 style={{ fontSize: '22px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '8px' }}>
-              {order ? 'Order Updated!' : 'Order Created!'}
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
-              The order has been successfully saved.
-            </p>
+          <div className="animate-fadeIn">
+            <h3 style={sectionTitleStyle}>📅 Schedules</h3>
 
-            <button
-              onClick={() => {
-                const balance = (formData.totalAmount || 0) - (formData.amountPaid || 0);
-                const msg = `*Eyas Saree Drapist - Order Confirmation*\n\n` +
-                  `📦 *Order Details:*\n` +
-                  `Name: ${formData.customerName}\n` +
-                  `Service: ${formData.serviceType}\n` +
-                  `Sarees: ${formData.sareeCount}\n` +
-                  `Event Date: ${formData.eventDate || 'Not specified'}\n\n` +
-                  `💰 *Payment Info:*\n` +
-                  `Total: ${formatCurrency(formData.totalAmount || 0)}\n` +
-                  `Advance: ${formatCurrency(formData.amountPaid || 0)}\n` +
-                  `*Balance: ${formatCurrency(balance)}*\n\n` +
-                  `Thank you for booking with us!`;
+            <label style={labelStyle}>Event Date *</label>
+            <input type="date" value={formData.eventDate} onChange={e => setFormData({ ...formData, eventDate: e.target.value })} style={inputStyle} />
 
-                const url = `https://wa.me/${formData.phone}?text=${encodeURIComponent(msg)}`;
-                window.open(url, '_blank');
-              }}
-              style={{
-                width: '100%',
-                padding: '16px',
-                background: '#25D366',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 'var(--radius-lg)',
-                fontSize: '18px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                marginBottom: '16px',
-                boxShadow: '0 4px 12px rgba(37, 211, 102, 0.3)'
-              }}
-            >
-              <span style={{ fontSize: '24px' }}>💬</span> Share on WhatsApp
-            </button>
+            <label style={labelStyle}>Sarees Received Date</label>
+            <input type="date" value={formData.sareeReceivedDate} onChange={e => setFormData({ ...formData, sareeReceivedDate: e.target.value })} style={inputStyle} />
 
-            <button
-              onClick={onClose}
-              style={{
-                background: 'transparent',
-                color: 'var(--text-secondary)',
-                border: 'none',
-                fontSize: '15px',
-                cursor: 'pointer',
-                textDecoration: 'underline'
-              }}
-            >
-              Close / Create Another
-            </button>
+            <label style={labelStyle}>Delivery Date</label>
+            <input type="date" value={formData.deliveryDate} onChange={e => setFormData({ ...formData, deliveryDate: e.target.value })} style={inputStyle} />
+
+            <label style={labelStyle}>Collection Date</label>
+            <input type="date" value={formData.collectionDate} onChange={e => setFormData({ ...formData, collectionDate: e.target.value })} style={inputStyle} />
+
+            <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
+              <button onClick={handleBack} style={{ flex: 1, padding: '12px', background: '#333', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer' }}>Back</button>
+              <button onClick={handleNext} style={{ flex: 2, padding: '12px', background: 'var(--gold)', border: 'none', borderRadius: '8px', color: '#000', fontWeight: 'bold', cursor: 'pointer' }}>Next: Review ➔</button>
+            </div>
           </div>
         )}
+
+        {/* STEP 4: REVIEW & SAVE */}
+        {step === 4 && (
+          <div className="animate-fadeIn">
+            <h3 style={sectionTitleStyle}>📝 Review Order</h3>
+
+            <div style={{ background: 'var(--dark-lighter)', borderRadius: '8px', padding: '12px', fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+              <div><strong>Customer:</strong> {formData.customerName}</div>
+              <div><strong>Phone:</strong> {formData.phone}</div>
+              <div style={{ marginTop: '8px', borderTop: '1px solid var(--border)', paddingTop: '8px' }}><strong>Service:</strong> {formData.serviceType} ({formData.sareeCount} Sarees)</div>
+              <div><strong>Event:</strong> {formatDate(formData.eventDate || '')}</div>
+              <div><strong>Function:</strong> {formData.functionType} {formData.functionSubType ? `(${formData.functionSubType})` : ''}</div>
+              <div><strong>Pleat:</strong> {formData.pleatType}</div>
+            </div>
+
+            <label style={labelStyle}>Advance Paid</label>
+            <input type="number" value={formData.amountPaid} onChange={e => setFormData({ ...formData, amountPaid: parseFloat(e.target.value) })} style={{ ...inputStyle, borderColor: '#10B981', color: '#10B981', fontWeight: 'bold' }} placeholder="₹ 0" />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 'bold', borderTop: '1px solid #333', paddingTop: '12px', marginTop: '12px' }}>
+              <span>Total Amount</span>
+              <span style={{ color: 'var(--gold)' }}>{formatCurrency(formData.totalAmount || 0)}</span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
+              <button onClick={handleBack} style={{ flex: 1, padding: '12px', background: '#333', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer' }}>Back</button>
+              <button onClick={handleSave} style={{ flex: 2, padding: '12px', background: 'var(--gold)', border: 'none', borderRadius: '8px', color: '#000', fontWeight: 'bold', cursor: 'pointer' }}>✅ Save Order</button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 5: SUCCESS & SHARE */}
+        {step === 5 && (
+          <div className="animate-fadeIn" style={{ textAlign: 'center', padding: '20px 0' }}>
+            <div style={{ fontSize: '50px', marginBottom: '10px' }}>🎉</div>
+            <h3 style={{ color: 'var(--gold)', marginBottom: '20px' }}>Order Saved!</h3>
+            <button
+              onClick={shareWhatsApp}
+              style={{ width: '100%', padding: '14px', background: '#25D366', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            >
+              Share on WhatsApp
+            </button>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+              <button onClick={() => {
+                // Reset everything for new order
+                setFormData({
+                  customerName: '', phone: '', address: '', serviceType: 'pre-pleat', location: 'shop', sareeCount: 1,
+                  sareeReceivedInAdvance: false, sareeReceivedDate: new Date().toISOString().split('T')[0],
+                  eventDate: '', deliveryDate: '', collectionDate: '', baseAmount: settings.prePleatRate, additionalCharges: [], totalAmount: settings.prePleatRate, payments: [], amountPaid: 0, status: 'pending', notes: '',
+                  measurementMethod: 'unknown', measurements: { bodyType: 'M', height: 'normal', palluHeight: 0, innerRotation: 0, bodyRotation: 0 },
+                  functionType: '', pleatType: ''
+                });
+                setIsExistingCustomer(false);
+                setStep(1);
+              }} style={{ background: 'var(--dark-lighter)', border: '1px solid #444', color: '#fff', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>Create Another</button>
+              <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#888', textDecoration: 'underline', cursor: 'pointer' }}>Close</button>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

@@ -278,7 +278,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, initialEventDate, s
               <input
                 type="text"
                 value={formData.phone || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value, customerName: '' }))}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, phone: e.target.value, customerName: '' }));
+                  setIsExistingCustomer(false);
+                }}
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
                 placeholder="Search Name or Phone..."

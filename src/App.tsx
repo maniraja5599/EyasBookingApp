@@ -253,7 +253,7 @@ const App: React.FC = () => {
     }}>
       {/* Header - Modern Gradient with Glow */}
       <header style={{
-        background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f23 100%)',
+        background: 'var(--bar-bg)',
         backdropFilter: 'blur(10px)',
         padding: '12px 16px',
         display: 'flex',
@@ -580,7 +580,7 @@ const App: React.FC = () => {
         bottom: '0',
         left: '0',
         right: '0',
-        background: 'linear-gradient(180deg, #0f0f23 0%, #1a1a2e 100%)',
+        background: 'var(--bar-bg)',
         borderTop: '1px solid var(--gold)',
         boxShadow: '0 -4px 30px var(--bar-shadow)',
         display: 'flex',

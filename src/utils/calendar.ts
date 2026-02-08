@@ -85,18 +85,18 @@ export function populateCalendarWithBookings(
 ): CalendarWeek[] {
     return weeks.map(week => ({
         days: week.days.map(day => {
-            const dayDateString = day.date.toISOString().split('T')[0];
+            // Use local date string YYYY-MM-DD
+            const dayDateString = `${day.date.getFullYear()}-${String(day.date.getMonth() + 1).padStart(2, '0')}-${String(day.date.getDate()).padStart(2, '0')}`;
 
             const dayOrders = orders.filter(order => {
                 if (!order.eventDate) return false;
-                const orderDate = new Date(order.eventDate);
-                return orderDate.toISOString().split('T')[0] === dayDateString;
+                // order.eventDate is YYYY-MM-DD string from input type="date"
+                return order.eventDate === dayDateString;
             });
 
             const dayEnquiries = enquiries.filter(enquiry => {
                 if (!enquiry.eventDate) return false;
-                const enquiryDate = new Date(enquiry.eventDate);
-                return enquiryDate.toISOString().split('T')[0] === dayDateString;
+                return enquiry.eventDate === dayDateString;
             });
 
             return {

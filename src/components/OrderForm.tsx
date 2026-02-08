@@ -9,14 +9,45 @@ interface OrderFormProps {
   setCustomers: React.Dispatch<React.SetStateAction<Customer[]>>;
   orders: Order[];
   onSave: (order: Order) => void;
+  onSettingsUpdate: React.Dispatch<React.SetStateAction<Settings>>;
   onClose: () => void;
 }
 
-export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers, setCustomers, orders, onSave, onClose }) => {
+export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers, setCustomers, orders, onSave, onSettingsUpdate, onClose }) => {
   // Steps: 1=Customer, 2=Service, 3=Dates, 4=Review, 5=Success
   const [step, setStep] = useState(order ? 2 : 1);
   const [isExistingCustomer, setIsExistingCustomer] = useState(false);
   const [permanentAddress, setPermanentAddress] = useState('');
+
+  // Instant Artist Creation State
+  const [isAddingArtist, setIsAddingArtist] = useState(false);
+  const [newArtistName, setNewArtistName] = useState('');
+  const [newArtistPhone, setNewArtistPhone] = useState('');
+
+  const handleAddArtist = () => {
+    if (newArtistName) {
+      const newArtist = {
+        id: Date.now().toString(),
+        name: newArtistName,
+        phone: newArtistPhone
+      };
+
+      onSettingsUpdate(prev => ({
+        ...prev,
+        makeupArtists: [...(prev.makeupArtists || []), newArtist]
+      }));
+
+      setFormData({
+        ...formData,
+        makeupArtistDetails: { name: newArtist.name, phone: newArtist.phone }
+      } as any);
+
+      setIsAddingArtist(false);
+      setNewArtistName('');
+      setNewArtistPhone('');
+    }
+  };
+
   const [showHistory, setShowHistory] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [referralSearchTerm, setReferralSearchTerm] = useState('');
@@ -372,21 +403,62 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers
 
                   {/* Makeup Artist Selection */}
                   {(formData as any).referralSource === 'makeup_artist' && (
-                    <select
-                      value={(formData as any).makeupArtistDetails?.name || ''}
-                      onChange={e => {
-                        const artist = settings.makeupArtists.find(a => a.name === e.target.value);
-                        if (artist) {
-                          setFormData({ ...formData, makeupArtistDetails: { name: artist.name, phone: artist.phone } } as any);
-                        }
-                      }}
-                      style={{ ...inputStyle, marginTop: '-8px' }}
-                    >
-                      <option value="">Select Makeup Artist</option>
-                      {(settings.makeupArtists || []).map(a => (
-                        <option key={a.id} value={a.name}>{a.name}</option>
-                      ))}
-                    </select>
+                    <div style={{ marginTop: '-8px' }}>
+                      {!isAddingArtist ? (
+                        <select
+                          value={(formData as any).makeupArtistDetails?.name || ''}
+                          onChange={e => {
+                            if (e.target.value === 'add_new') {
+                              setIsAddingArtist(true);
+                            } else {
+                              const artist = settings.makeupArtists.find(a => a.name === e.target.value);
+                              if (artist) {
+                                setFormData({ ...formData, makeupArtistDetails: { name: artist.name, phone: artist.phone } } as any);
+                              }
+                            }
+                          }}
+                          style={{ ...inputStyle }}
+                        >
+                          <option value="">Select Makeup Artist</option>
+                          {(settings.makeupArtists || []).map(a => (
+                            <option key={a.id} value={a.name}>{a.name}</option>
+                          ))}
+                          <option value="add_new" style={{ fontWeight: 'bold', color: 'var(--gold)' }}>+ Add New Artist</option>
+                        </select>
+                      ) : (
+                        <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px' }}>
+                          <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--gold)' }}>Add New Artist</h4>
+                          <input
+                            type="text"
+                            placeholder="Artist Name"
+                            value={newArtistName}
+                            onChange={(e) => setNewArtistName(e.target.value)}
+                            style={{ ...inputStyle, marginBottom: '8px' }}
+                          />
+                          <input
+                            type="tel"
+                            placeholder="Phone Number"
+                            value={newArtistPhone}
+                            onChange={(e) => setNewArtistPhone(e.target.value)}
+                            style={{ ...inputStyle, marginBottom: '8px' }}
+                          />
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={handleAddArtist}
+                              style={{ flex: 1, padding: '8px', background: 'var(--gold)', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
+                            >
+                              Add
+                            </button>
+                            <button
+                              onClick={() => setIsAddingArtist(false)}
+                              style={{ flex: 1, padding: '8px', background: 'transparent', border: '1px solid var(--text-secondary)', color: 'var(--text-secondary)', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   {/* Customer Referral Search */}

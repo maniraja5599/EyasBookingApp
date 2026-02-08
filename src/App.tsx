@@ -685,6 +685,7 @@ const App: React.FC = () => {
             setCustomers={setCustomers}
             orders={orders}
             onSave={handleSaveOrder}
+            onSettingsUpdate={setSettings}
             onClose={() => { setShowOrderForm(false); setEditingOrder(null); }}
           />
         )

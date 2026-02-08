@@ -23,6 +23,7 @@ const App: React.FC = () => {
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [editingEnquiry, setEditingEnquiry] = useState<Enquiry | null>(null);
+  const [initialEventDate, setInitialEventDate] = useState<string>('');
 
   // Theme State
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -317,6 +318,7 @@ const App: React.FC = () => {
           <button
             onClick={() => {
               setEditingOrder(null);
+              setInitialEventDate('');
               setShowOrderForm(true);
             }}
             style={{
@@ -545,8 +547,11 @@ const App: React.FC = () => {
             onEditEnquiry={(enquiry) => { setEditingEnquiry(enquiry); setShowEnquiryForm(true); }}
             onDeleteOrder={(orderId) => setOrders(orders.filter(o => o.id !== orderId))}
             onDeleteEnquiry={(enquiryId) => setEnquiries(enquiries.filter(e => e.id !== enquiryId))}
-            onNewBooking={(_date) => {
+            onNewBooking={(date) => {
               setEditingOrder(null);
+              // date is a Date object, format it to YYYY-MM-DD
+              const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+              setInitialEventDate(dateString);
               setShowOrderForm(true);
             }}
           />
@@ -680,13 +685,14 @@ const App: React.FC = () => {
         showOrderForm && (
           <OrderForm
             order={editingOrder}
+            initialEventDate={initialEventDate}
             settings={settings}
             customers={customers}
             setCustomers={setCustomers}
             orders={orders}
             onSave={handleSaveOrder}
             onSettingsUpdate={setSettings}
-            onClose={() => { setShowOrderForm(false); setEditingOrder(null); }}
+            onClose={() => { setShowOrderForm(false); setEditingOrder(null); setInitialEventDate(''); }}
           />
         )
       }

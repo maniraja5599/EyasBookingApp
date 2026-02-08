@@ -4,6 +4,7 @@ import { formatCurrency, formatDate, generateId } from '../utils';
 
 interface OrderFormProps {
   order: Order | null;
+  initialEventDate?: string;
   settings: Settings;
   customers: Customer[];
   setCustomers: React.Dispatch<React.SetStateAction<Customer[]>>;
@@ -13,7 +14,7 @@ interface OrderFormProps {
   onClose: () => void;
 }
 
-export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers, setCustomers, orders, onSave, onSettingsUpdate, onClose }) => {
+export const OrderForm: React.FC<OrderFormProps> = ({ order, initialEventDate, settings, customers, setCustomers, orders, onSave, onSettingsUpdate, onClose }) => {
   // Steps: 1=Customer, 2=Service, 3=Dates, 4=Review, 5=Success
   const [step, setStep] = useState(order ? 2 : 1);
   const [isExistingCustomer, setIsExistingCustomer] = useState(false);
@@ -62,7 +63,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({ order, settings, customers
     sareeCount: 1,
     sareeReceivedInAdvance: false,
     sareeReceivedDate: new Date().toISOString().split('T')[0],
-    eventDate: '',
+    eventDate: initialEventDate || '',
     deliveryDate: '',
     collectionDate: '',
     baseAmount: settings.prePleatRate,

@@ -6,7 +6,7 @@
 :root {
   /* Primary Colors - Fixed Palette */
   --gold: #F5A623;
-  --gold-light: #FFD54F;
+  --gold-light: #5a4a16;
   --gold-dark: #E09000;
 
   --dark: #1a1a2e;
@@ -42,6 +42,9 @@
   /* Bar Styles (Theme-aware) */
   --bar-bg: rgba(0, 0, 0, 0.4);
   --bar-shadow: rgba(0, 0, 0, 0.3);
+  --header-bg: rgba(16, 17, 17, 0.726);
+  --header-border-color: var(--gold);
+  --header-text: var(--gold);
 
   /* Page gradient */
   --page-gradient: var(--dark);
@@ -66,6 +69,9 @@
 
   /* Bar Styles (Light Theme) - Duller/Grayish to reduce glare */
   --bar-bg: rgba(245, 246, 250, 0.98);
+  --header-bg: rgba(249, 252, 75, 0.158);
+  --header-border-color: #573a0b;
+  --header-text: #000000;
   --bar-shadow: rgba(0, 0, 0, 0.15);
 
   /* Light gradient background - Strict Dull/Gray Mode */

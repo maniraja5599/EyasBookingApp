@@ -253,13 +253,13 @@ const App: React.FC = () => {
     }}>
       {/* Header - Modern Gradient with Glow */}
       <header style={{
-        background: 'var(--bar-bg)',
+        background: 'var(--header-bg)',
         backdropFilter: 'blur(10px)',
         padding: '12px 16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderBottom: '1px solid var(--gold)',
+        borderBottom: '1px solid var(--header-border-color)',
         boxShadow: '0 4px 30px var(--bar-shadow)',
         position: 'sticky',
         top: 0,
@@ -281,7 +281,7 @@ const App: React.FC = () => {
             <h1 style={{
               fontSize: '22px', // Reduced per request
               fontWeight: 'bold',
-              color: 'var(--gold)',
+              color: 'var(--header-text)',
               margin: 0,
               fontFamily: '"Kaushan Script", cursive',
               letterSpacing: '0.5px',

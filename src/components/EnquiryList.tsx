@@ -10,16 +10,17 @@ export const EnquiryList: React.FC<{
   onEdit: (enquiry: Enquiry) => void;
   onDelete: (id: string) => void;
   onConvert: (enquiry: Enquiry) => void;
-}> = ({ enquiries, cardStyle, btnPrimary, btnSecondary: _, onEdit, onDelete, onConvert }) => {
+  onNew: () => void;
+}> = ({ enquiries, cardStyle, btnPrimary, btnSecondary: _, onEdit, onDelete, onConvert, onNew }) => {
   const [filter, setFilter] = useState<string>('all');
 
   const filteredEnquiries = enquiries.filter(e => filter === 'all' || e.status === filter);
 
   const statusColors: Record<string, string> = {
-    'new': '#10B981',
-    'follow-up': '#F59E0B',
-    'converted': '#3B82F6',
-    'cancelled': '#6B7280',
+    'new': 'var(--success)',
+    'follow-up': 'var(--warning)',
+    'converted': 'var(--info)',
+    'cancelled': 'var(--text-muted)',
   };
 
   const sendWhatsAppFollowUp = (enquiry: Enquiry) => {
@@ -44,13 +45,27 @@ Thank you! 🙏`;
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-        <h2 style={{
-          fontSize: '24px',
-          fontWeight: 'bold',
-          background: 'var(--accent-gold)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-        }}>📋 Enquiries</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <h2 style={{
+            fontSize: '24px',
+            fontWeight: 'bold',
+            background: 'var(--accent-gold)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            margin: 0,
+          }}>📋 Enquiries</h2>
+          <button
+            onClick={onNew}
+            style={{
+              ...btnPrimary,
+              padding: '6px 12px',
+              fontSize: '12px',
+              height: '32px'
+            }}
+          >
+            + New
+          </button>
+        </div>
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
@@ -87,7 +102,7 @@ Thank you! 🙏`;
               </div>
               <span style={{
                 background: `linear-gradient(135deg, ${statusColors[enquiry.status]}, ${statusColors[enquiry.status]}dd)`,
-                color: '#fff',
+                color: enquiry.status === 'follow-up' ? 'var(--dark)' : '#fff',
                 padding: '6px 14px',
                 borderRadius: 'var(--radius-full)',
                 fontSize: '11px',
@@ -99,7 +114,7 @@ Thank you! 🙏`;
               </span>
             </div>
 
-            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '13px', color: '#aaa', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
               <span>🪻 {enquiry.serviceType === 'pre-pleat' ? 'Pre-Pleat' : enquiry.serviceType === 'drape' ? 'Drape' : 'Both'}</span>
               <span>👗 {enquiry.sareeCount} sarees</span>
               <span>{enquiry.location === 'onsite' ? '📍 On-Site' : '🏪 Shop'}</span>

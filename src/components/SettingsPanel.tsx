@@ -43,8 +43,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, orders, 
 
     const inputStyle: React.CSSProperties = {
         width: '100%',
-        background: 'var(--bg-secondary)',
-        border: '1px solid #444',
+        background: 'var(--input-bg)',
+        border: '1px solid var(--border)',
         padding: '12px',
         borderRadius: '8px',
         color: 'var(--text-primary)',
@@ -302,10 +302,49 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, orders, 
                 </div>
             </div>
 
+            {/* Referral Sources */}
+            <div style={{ ...cardStyle, marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px', color: 'var(--accent-color)' }}>📢 Referral Sources</h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                    {(formData.referralSources || []).map(source => (
+                        <span key={source} style={{ background: 'var(--bg-tertiary)', padding: '8px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+                            {source}
+                            {/* Prevent deleting default sources if needed, but allowing flexibility for now */}
+                            <button onClick={() => setFormData({ ...formData, referralSources: (formData.referralSources || []).filter(s => s !== source) })} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer' }}>✕</button>
+                        </span>
+                    ))}
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                        type="text"
+                        placeholder="New Referral Source"
+                        id="newReferralSource"
+                        style={{ ...inputStyle, marginBottom: 0, flex: 1 }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                const val = e.currentTarget.value.trim();
+                                if (val && !(formData.referralSources || []).includes(val)) {
+                                    setFormData({ ...formData, referralSources: [...(formData.referralSources || []), val] });
+                                    e.currentTarget.value = '';
+                                }
+                            }
+                        }}
+                    />
+                    <button onClick={() => {
+                        const input = document.getElementById('newReferralSource') as HTMLInputElement;
+                        const val = input.value.trim();
+                        if (val && !(formData.referralSources || []).includes(val)) {
+                            setFormData({ ...formData, referralSources: [...(formData.referralSources || []), val] });
+                            input.value = '';
+                        }
+                    }} style={{ ...btnPrimary, padding: '12px 20px' }}>Add</button>
+                </div>
+            </div>
+
             {/* Makeup Artists */}
             <div style={{ ...cardStyle, marginBottom: '16px' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px', color: 'var(--accent-color)' }}>💄 Makeup Artists</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
                     {(formData.makeupArtists || []).map(artist => (
                         <div key={artist.id} style={{ background: 'var(--bg-tertiary)', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', border: '1px solid var(--border)' }}>
                             <div>

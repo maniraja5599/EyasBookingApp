@@ -12,6 +12,10 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   base: "/EyasBookingApp/",
   plugins: [react(), tailwindcss(), viteSingleFile()],
+  server: {
+    host: true, // Expose to local network
+    port: 5173, // Default port
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

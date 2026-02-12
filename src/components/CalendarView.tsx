@@ -63,13 +63,13 @@ export function CalendarView({
 
     const getStatusColor = (status: string): string => {
         switch (status) {
-            case 'pending': return '#ffc107';
-            case 'received': return '#17a2b8';
-            case 'confirmed': return '#17a2b8';
+            case 'pending': return 'var(--warning)';
+            case 'received': return 'var(--info)';
+            case 'confirmed': return 'var(--info)';
             case 'in-progress': return '#9b59b6';
-            case 'completed': return '#28a745';
-            case 'delivered': return '#6c757d';
-            default: return '#ffc107';
+            case 'completed': return 'var(--success)';
+            case 'delivered': return 'var(--text-muted)';
+            default: return 'var(--warning)';
         }
     };
 
@@ -151,7 +151,7 @@ export function CalendarView({
         modal: {
             position: 'fixed' as const,
             inset: 0,
-            background: 'rgba(0,0,0,0.8)',
+            background: 'var(--modal-backdrop)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -246,7 +246,7 @@ export function CalendarView({
                                                 ? 'rgba(245, 166, 35, 0.15)'
                                                 : day.isCurrentMonth
                                                     ? 'var(--dark-light)'
-                                                    : 'var(--dark)',
+                                                    : 'var(--input-bg)',
                                             borderRight: dayIdx === 6 ? 'none' : '1px solid var(--border)',
                                         }}
                                     >
@@ -274,7 +274,7 @@ export function CalendarView({
                                                         padding: '2px 4px',
                                                         borderRadius: '4px',
                                                         background: getStatusColor(order.status),
-                                                        color: '#fff',
+                                                        color: order.status === 'pending' ? 'var(--dark)' : '#fff',
                                                         whiteSpace: 'nowrap',
                                                         overflow: 'hidden',
                                                         textOverflow: 'ellipsis',
@@ -323,10 +323,10 @@ export function CalendarView({
                 </p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '11px' }}>
                     {[
-                        { color: '#ffc107', label: 'Pending' },
-                        { color: '#17a2b8', label: 'Confirmed' },
+                        { color: 'var(--warning)', label: 'Pending' },
+                        { color: 'var(--info)', label: 'Confirmed' },
                         { color: '#9b59b6', label: 'In Progress' },
-                        { color: '#28a745', label: 'Completed' },
+                        { color: 'var(--success)', label: 'Completed' },
                         { color: '#e67e22', label: 'Enquiry' },
                     ].map(item => (
                         <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -393,7 +393,7 @@ export function CalendarView({
                                                     fontSize: '10px',
                                                     fontWeight: '600',
                                                     background: getStatusColor(order.status),
-                                                    color: '#fff',
+                                                    color: order.status === 'pending' ? 'var(--dark)' : '#fff',
                                                 }}>
                                                     {order.status}
                                                 </span>

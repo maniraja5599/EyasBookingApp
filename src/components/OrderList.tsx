@@ -21,11 +21,11 @@ export const OrderList: React.FC<{
   const filteredOrders = orders.filter(o => filter === 'all' || o.status === filter);
 
   const statusColors: Record<string, string> = {
-    'pending': '#F59E0B',
-    'received': '#3B82F6',
-    'in-progress': '#8B5CF6',
-    'completed': '#10B981',
-    'delivered': '#6B7280',
+    'pending': 'var(--warning)',
+    'received': 'var(--info)',
+    'in-progress': '#9b59b6',
+    'completed': 'var(--success)',
+    'delivered': 'var(--text-muted)',
   };
 
   const sendWhatsAppQuotation = (order: Order) => {
@@ -117,7 +117,7 @@ Thank you for choosing us! 🙏`;
                 </div>
                 <span style={{
                   background: `linear-gradient(135deg, ${statusColors[order.status]}, ${statusColors[order.status]}dd)`,
-                  color: '#fff',
+                  color: order.status === 'pending' ? 'var(--dark)' : '#fff',
                   padding: '6px 14px',
                   borderRadius: 'var(--radius-full)',
                   fontSize: '11px',
@@ -129,7 +129,7 @@ Thank you for choosing us! 🙏`;
                 </span>
               </div>
 
-              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '13px', color: '#aaa' }}>
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '13px', color: 'var(--text-secondary)' }}>
                 <span>🪻 {order.serviceType === 'pre-pleat' ? 'Pre-Pleat' : order.serviceType === 'drape' ? 'Drape' : 'Both'}</span>
                 <span>👗 {order.sareeCount} sarees</span>
                 <span>{order.location === 'onsite' ? '📍 On-Site' : '🏪 Shop'}</span>
@@ -203,7 +203,7 @@ Thank you for choosing us! 🙏`;
                       <span>{formatCurrency(charge.amount)}</span>
                     </div>
                   ))}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', paddingTop: '8px', borderTop: '1px solid #444' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
                     <span>Total</span>
                     <span style={{ color: 'var(--accent-color)' }}>{formatCurrency(order.totalAmount)}</span>
                   </div>
@@ -213,12 +213,12 @@ Thank you for choosing us! 🙏`;
                 <div style={{ marginBottom: '16px' }}>
                   <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--accent-color)' }}>Payment History</h4>
                   {(order.payments || []).length === 0 ? (
-                    <p style={{ color: '#666', fontSize: '13px' }}>No payments yet</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No payments yet</p>
                   ) : (
                     (order.payments || []).map(payment => (
                       <div key={payment.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', padding: '8px', background: 'var(--bg-secondary)', borderRadius: '6px', marginBottom: '4px' }}>
                         <span>{formatDate(payment.date)} • {payment.mode}</span>
-                        <span style={{ color: '#10B981' }}>+{formatCurrency(payment.amount)}</span>
+                        <span style={{ color: 'var(--success)' }}>+{formatCurrency(payment.amount)}</span>
                       </div>
                     ))
                   )}
@@ -234,7 +234,7 @@ Thank you for choosing us! 🙏`;
                       width: '100%',
                       background: 'var(--bg-secondary)',
                       color: 'var(--text-primary)',
-                      border: '1px solid #444',
+                      border: '1px solid var(--border)',
                       padding: '10px',
                       borderRadius: '8px',
                     }}
@@ -288,7 +288,7 @@ Thank you for choosing us! 🙏`;
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0,0,0,0.85)',
+          background: 'var(--modal-backdrop)',
           backdropFilter: 'blur(10px)',
           display: 'flex',
           alignItems: 'center',

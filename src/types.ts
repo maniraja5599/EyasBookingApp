@@ -35,6 +35,7 @@ export interface Settings {
     customChargeHeads: string[];
     functionTypes: string[];
     pleatTypes: string[];
+    referralSources: string[];
     makeupArtists: { id: string; name: string; phone: string }[];
 }
 

@@ -46,6 +46,31 @@
   --header-border-color: var(--gold);
   --header-text: var(--gold);
 
+  /* Floating Nav Specifics (Dark) */
+  --nav-bg: rgba(20, 20, 35, 0.75);
+  /* Dark Glass */
+  --nav-border: var(--gold);
+  --nav-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --nav-item-active-bg: rgba(245, 166, 35, 0.15);
+
+  /* Form / Modal Styles (Theme-aware) */
+  --modal-backdrop: rgba(0, 0, 0, 0.6);
+  --glass-bg: rgba(30, 30, 50, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --input-bg: rgba(0, 0, 0, 0.3);
+  --input-border: rgba(255, 255, 255, 0.1);
+  --suggestion-hover: rgba(255, 255, 255, 0.05);
+  --suggestion-divider: rgba(255, 255, 255, 0.05);
+  --suggestion-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --bg-modal-solid: #1e293b;
+  /* Dark Slate Blue */
+  --btn-subtle-bg: rgba(255, 255, 255, 0.1);
+  --btn-subtle-border: rgba(255, 255, 255, 0.2);
+  --btn-subtle-text: #fff;
+  --digit-valid-text: #fff;
+  --customer-pill-name: rgba(255, 255, 255, 0.6);
+  --customer-pill-title: #fff;
+
   /* Page gradient */
   --page-gradient: var(--dark);
   --page-pattern: none;
@@ -74,10 +99,35 @@
   --header-text: #000000;
   --bar-shadow: rgba(0, 0, 0, 0.15);
 
+  /* Floating Nav Specifics (Light) */
+  --nav-bg: rgba(255, 255, 255, 0.85);
+  /* High opacity white */
+  --nav-border: rgba(0, 0, 0, 0.05);
+  --nav-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --nav-item-active-bg: rgba(0, 0, 0, 0.05);
+
   /* Light gradient background - Strict Dull/Gray Mode */
   --page-gradient: linear-gradient(180deg, #E5E7EB 0%, #D1D5DB 100%);
   --page-pattern: none;
   --pattern-size: auto;
+
+  /* Form / Modal Styles (Light Theme) */
+  --modal-backdrop: rgba(0, 0, 0, 0.35);
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --bg-modal-solid: #dae3f0;
+  /* Light Dull Blue - desaturated */
+  --glass-border: rgba(0, 0, 0, 0.12);
+  --input-bg: rgba(255, 255, 255, 0.8);
+  --input-border: rgba(0, 0, 0, 0.15);
+  --suggestion-hover: rgba(0, 0, 0, 0.04);
+  --suggestion-divider: rgba(0, 0, 0, 0.06);
+  --suggestion-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --btn-subtle-bg: rgba(0, 0, 0, 0.06);
+  --btn-subtle-border: rgba(0, 0, 0, 0.15);
+  --btn-subtle-text: var(--text-primary);
+  --digit-valid-text: #1a1a2e;
+  --customer-pill-name: #555;
+  --customer-pill-title: #2d2d2d;
 }
 
 * {
@@ -345,4 +395,83 @@ input::placeholder {
 
 .nav-item.active .nav-icon {
   color: var(--text-inverse);
+}
+
+/* Glassmorphism & Modern UI Utilities */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.light-mode .glass-panel {
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+}
+
+.input-glow:focus {
+  outline: none;
+  border-color: var(--gold);
+  background: var(--input-bg);
+  box-shadow: 0 0 0 2px rgba(245, 166, 35, 0.1);
+}
+
+.service-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.service-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.service-card.active {
+  background: rgba(245, 166, 35, 0.15);
+  border-color: var(--gold);
+  transform: translateY(-2px);
+}
+
+.service-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.service-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.service-card.active .service-name {
+  color: var(--gold);
+}
+
+.customer-pill {
+  display: flex;
+  align-items: center;
+  background: rgba(16, 185, 129, 0.1);
+  border-left: 3px solid #10B981;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  font-weight: 600;
 }

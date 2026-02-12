@@ -17,7 +17,8 @@ export const CustomerReport: React.FC<{
     enquiries: Enquiry[];
     cardStyle: React.CSSProperties;
     onViewOrder: (order: Order) => void;
-}> = ({ customers, orders, enquiries, cardStyle, onViewOrder }) => {
+    onAddCustomer: () => void;
+}> = ({ customers, orders, enquiries, cardStyle, onViewOrder, onAddCustomer }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCustomer, setSelectedCustomer] = useState<CustomerStats | null>(null);
 
@@ -87,6 +88,25 @@ export const CustomerReport: React.FC<{
                         fontSize: '14px'
                     }}
                 />
+                <button
+                    onClick={onAddCustomer}
+                    style={{
+                        background: 'var(--gold)',
+                        color: 'var(--text-inverse)',
+                        border: 'none',
+                        padding: '10px 16px',
+                        borderRadius: 'var(--radius)',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        marginLeft: '16px',
+                        fontSize: '14px'
+                    }}
+                >
+                    + Add New
+                </button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>

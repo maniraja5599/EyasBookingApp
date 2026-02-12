@@ -107,11 +107,11 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({ enquiry, customers, se
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
-    background: '#252542',
-    border: '1px solid #3a3a5a',
+    background: 'var(--input-bg)',
+    border: '1px solid var(--input-border)',
     padding: '12px',
     borderRadius: '8px',
-    color: '#ffffff',
+    color: 'var(--text-primary)',
     fontSize: '16px',
     marginBottom: '16px',
   };
@@ -120,7 +120,7 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({ enquiry, customers, se
     display: 'block',
     marginBottom: '8px',
     fontSize: '14px',
-    color: '#F5A623',
+    color: 'var(--gold)',
     fontWeight: 'bold',
   };
 
@@ -131,7 +131,7 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({ enquiry, customers, se
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0,0,0,0.8)',
+      background: 'var(--modal-backdrop)',
       backdropFilter: 'blur(5px)',
       zIndex: 200,
       overflow: 'auto',
@@ -141,15 +141,15 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({ enquiry, customers, se
       padding: '20px'
     }}>
       <div style={{
-        background: '#1a1a2e',
+        background: 'var(--glass-bg)',
         width: '100%',
         maxWidth: '600px',
         borderRadius: '16px',
         padding: '24px',
         maxHeight: '90vh',
         overflowY: 'auto',
-        border: '1px solid rgba(255, 215, 0, 0.1)',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+        border: '1px solid var(--glass-border)',
+        boxShadow: 'var(--suggestion-shadow)'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <h2 style={{
@@ -169,8 +169,8 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({ enquiry, customers, se
           <div className="animate-fadeIn">
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>📱</div>
-              <h3 style={{ fontSize: '20px', color: '#fff', marginBottom: '8px' }}>Customer Check</h3>
-              <p style={{ color: '#aaa' }}>Enter mobile number to check for existing customer history.</p>
+              <h3 style={{ fontSize: '20px', color: 'var(--text-primary)', marginBottom: '8px' }}>Customer Check</h3>
+              <p style={{ color: 'var(--text-secondary)' }}>Enter mobile number to check for existing customer history.</p>
             </div>
 
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', marginBottom: '24px' }}>
@@ -245,10 +245,10 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({ enquiry, customers, se
               }}>
                 <div>
                   <span style={{ fontSize: '18px', marginRight: '8px' }}>{isExistingCustomer ? '👋' : '🆕'}</span>
-                  <span style={{ color: '#fff', fontWeight: 'bold' }}>
+                  <span style={{ color: 'var(--customer-pill-title)', fontWeight: 'bold' }}>
                     {isExistingCustomer ? 'Existing Customer' : 'New Customer'}
                   </span>
-                  <div style={{ fontSize: '13px', color: '#aaa', marginTop: '4px' }}>
+                  <div style={{ fontSize: '13px', color: 'var(--customer-pill-name)', marginTop: '4px' }}>
                     {formData.phone}
                   </div>
                 </div>

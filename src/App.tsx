@@ -10,8 +10,10 @@ import { Order, Enquiry, Settings, Customer } from './types';
 import { generateId } from './utils';
 import { ReferralReport } from './components/ReferralReport';
 import { CustomerReport } from './components/CustomerReport';
+import { GlobalSearch } from './components/GlobalSearch';
+import { AddCustomerModal } from './components/AddCustomerModal';
 
-// ... (existing imports)
+import { LayoutDashboard, Package, ClipboardList, Users, Megaphone, Calendar, Settings as SettingsIcon, Search } from 'lucide-react';
 
 
 import logo from './assets/eyas-logo.svg';
@@ -24,6 +26,8 @@ const App: React.FC = () => {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [editingEnquiry, setEditingEnquiry] = useState<Enquiry | null>(null);
   const [initialEventDate, setInitialEventDate] = useState<string>('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [showAddCustomer, setShowAddCustomer] = useState(false);
 
   // Theme State
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -75,6 +79,7 @@ const App: React.FC = () => {
       customChargeHeads: ['Travel', 'Urgent', 'Extra Pleats'],
       functionTypes: ['Marriage', 'Baby Shower', 'Regular Use', 'Puberty Function', 'Guest Drape'],
       pleatTypes: ['Box Folding', 'Pluffy Pleat', 'Center Pleat', 'Mermaid Drape', 'Cowboy Drape'],
+      referralSources: ['Instagram', 'Old Customer', 'Makeup Artist', 'Family/Friend', 'Other'],
       makeupArtists: [], // Default empty list
       ...parsed // Overwrite defaults with saved values, but keep defaults for missing keys
     };
@@ -189,29 +194,17 @@ const App: React.FC = () => {
   };
 
 
-  // Styled Icon Component - Clean design
-  const Icon: React.FC<{ symbol: string; size?: number }> = ({ symbol, size = 24 }) => (
-    <div style={{
-      width: `${size}px`,
-      height: `${size}px`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: `${size * 0.7}px`,
-    }}>
-      {symbol}
-    </div>
-  );
+
 
   // Navigation items - Simple and clean
   const navItems = [
-    { id: 'dashboard', label: 'Home', symbol: '🏠' },
-    { id: 'orders', label: 'Orders', symbol: '📦' },
-    { id: 'enquiries', label: 'Enquiries', symbol: '📋' },
-    { id: 'customers', label: 'Customers', symbol: '👥' },
-    { id: 'referrals', label: 'Referrals', symbol: '📢' },
-    { id: 'calendar', label: 'Calendar', symbol: '📅' },
-    { id: 'settings', label: 'Settings', symbol: '⚙️' },
+    { id: 'dashboard', label: 'Home', icon: LayoutDashboard, color: '#F5A623' },
+    { id: 'orders', label: 'Orders', icon: Package, color: '#4A90E2' },
+    { id: 'enquiries', label: 'Enquiries', icon: ClipboardList, color: '#BD10E0' },
+    { id: 'customers', label: 'Customers', icon: Users, color: '#50E3C2' },
+    { id: 'referrals', label: 'Referrals', icon: Megaphone, color: '#F8E71C' },
+    { id: 'calendar', label: 'Calendar', icon: Calendar, color: '#E04F5F' },
+    { id: 'settings', label: 'Settings', icon: SettingsIcon, color: '#9B9B9B' },
   ];
 
   // Keyboard shortcuts
@@ -316,14 +309,9 @@ const App: React.FC = () => {
           </button>
 
           <button
-            onClick={() => {
-              setEditingOrder(null);
-              setInitialEventDate('');
-              setShowOrderForm(true);
-            }}
+            onClick={() => setShowSearch(true)}
             style={{
-              background: 'var(--gold)',
-              color: 'var(--dark)',
+              background: 'transparent',
               border: 'none',
               borderRadius: '50%',
               width: '36px',
@@ -334,24 +322,18 @@ const App: React.FC = () => {
               fontSize: '20px',
               fontWeight: 'bold',
               cursor: 'pointer',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+              // boxShadow: '0 2px 4px rgba(0,0,0,0.2)', // Removed box shadow to match other icon
+              color: 'var(--text-secondary)', // Match theme
               padding: 0,
             }}
-            title="New Order"
+            title="Search Customers"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="var(--text-inverse)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M16 2V6" stroke="var(--text-inverse)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M8 2V6" stroke="var(--text-inverse)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M3 10H21" stroke="var(--text-inverse)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M12 14V18" stroke="var(--text-inverse)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M10 16H14" stroke="var(--text-inverse)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <Search size={20} strokeWidth={2} />
           </button>
         </div>
       </header>
 
-      {/* Bottom Sheet Menu */}
+      {/* Bottom Sheet Menu - Floating Pop-up Style */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
@@ -360,115 +342,111 @@ const App: React.FC = () => {
             top: 0,
             left: 0,
             right: 0,
-            bottom: '70px',
+            bottom: 0,
             background: 'rgba(0,0,0,0.5)',
-            zIndex: 200,
+            zIndex: 1050, // Higher than nav
+            opacity: sidebarOpen ? 1 : 0,
+            transition: 'opacity 0.2s',
           }}
         />
       )}
       <aside style={{
         position: 'fixed',
-        left: 0,
-        right: 0,
-        bottom: sidebarOpen ? '70px' : '-100%',
-        zIndex: 210,
-        background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)',
-        borderTop: '1px solid var(--gold)',
-        borderRadius: '24px 24px 0 0',
-        boxShadow: '0 -8px 40px var(--bar-shadow)',
-        transition: 'bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        maxHeight: '40vh', // Reduced height per request
-        overflow: 'hidden',
+        left: '50%',
+        transform: sidebarOpen ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(20px)',
+        bottom: '90px',
+        width: '90%', // Ensure it takes up space for wide layout
+        maxWidth: '600px', // Prevent it from being weirdly huge on desktop
+        zIndex: 1100, // Above overlay and nav
+        background: 'transparent',
+        border: 'none',
+        boxShadow: 'none',
+        transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        opacity: sidebarOpen ? 1 : 0,
+        pointerEvents: sidebarOpen ? 'auto' : 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '10px',
       }}>
-        {/* Handle Bar */}
+        {/* Helper Label */}
         <div style={{
+          background: 'rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(4px)',
+          padding: '4px 12px',
+          borderRadius: '20px',
+          color: 'white',
+          fontSize: '10px',
+          opacity: sidebarOpen ? 1 : 0,
+          transform: sidebarOpen ? 'translateY(0)' : 'translateY(10px)',
+          transition: 'all 0.3s 0.1s',
+          marginBottom: '5px'
+        }}>
+          Quick Actions
+        </div>
+
+        {/* Menu Items - Floating Bubbles */}
+        <nav style={{
           display: 'flex',
+          flexWrap: 'wrap',
           justifyContent: 'center',
-          padding: '12px',
-          borderBottom: '1px solid var(--border)'
+          gap: '15px',
+          width: '100%', // Use container width
+          padding: '0 10px' // Slightly tighter padding
         }}>
-          <div style={{
-            width: '40px',
-            height: '4px',
-            background: 'var(--text-muted)',
-            borderRadius: '2px'
-          }} />
-        </div>
+          {navItems.map((item, index) => {
+            // Define item specific colors for the menu view
+            const itemColor = item.color;
 
-        {/* Menu Title */}
-        <div style={{
-          padding: '16px 24px',
-          borderBottom: '1px solid var(--border)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: 'var(--gold)' }}>Menu</h3>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              fontSize: '24px',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              padding: '4px',
-            }}
-          >✕</button>
-        </div>
+            const Icon = item.icon;
 
-        {/* Menu Items - Grid Layout */}
-        <nav style={{ padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-          {navItems.map(item => (
-            <button
-              key={item.id}
-              onClick={() => { setActiveTab(item.id as any); setSidebarOpen(false); }}
-              style={{
-                padding: '12px 6px',
-                background: activeTab === item.id ? 'rgba(245, 166, 35, 0.15)' : 'var(--dark-lighter)',
-                color: activeTab === item.id ? 'var(--gold)' : 'var(--text-primary)',
-                border: activeTab === item.id ? '2px solid var(--gold)' : '1px solid var(--border)',
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '6px',
-                fontSize: '11px',
-                fontWeight: activeTab === item.id ? '600' : '500',
-                borderRadius: '12px',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <span style={{ fontSize: '16px' }}>{item.symbol}</span>
-              {item.label}
-            </button>
-          ))}
+            // Staggered animation delay based on index
+            const transitionDelay = sidebarOpen ? `${index * 0.05}s` : '0s';
+
+            const isDark = theme === 'dark';
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => { setActiveTab(item.id as any); setSidebarOpen(false); }}
+                style={{
+                  width: '60px',
+                  height: '60px',
+                  background: activeTab === item.id
+                    ? (isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.05)')
+                    : (isDark ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)'),
+                  backdropFilter: 'blur(10px)',
+                  border: `1px solid ${activeTab === item.id ? itemColor : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)')}`,
+                  borderRadius: '50%', // Circle bubbles
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '2px',
+                  transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                  transitionDelay: transitionDelay,
+                  boxShadow: activeTab === item.id
+                    ? `0 0 15px ${itemColor}${isDark ? '60' : '40'}`
+                    : (isDark ? '0 4px 15px rgba(0,0,0,0.3)' : '0 4px 15px rgba(0,0,0,0.1)'),
+                  transform: sidebarOpen ? 'scale(1)' : 'scale(0)',
+                }}
+                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.9)'}
+                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                <div style={{ color: itemColor }}>
+                  <Icon size={20} strokeWidth={2} />
+                </div>
+                <span style={{
+                  fontSize: '8px',
+                  fontWeight: '600',
+                  color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
+                  marginTop: '2px'
+                }}>{item.label}</span>
+              </button>
+            );
+          })}
         </nav>
-
-        {/* Developer Footer */}
-        <div style={{
-          padding: '10px 16px',
-          borderTop: '1px solid rgba(245, 166, 35, 0.3)',
-          background: 'rgba(0,0,0,0.3)',
-          textAlign: 'center',
-        }}>
-          <a
-            href="https://www.instagram.com/maniraja__/?hl=en"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              color: 'var(--gold)',
-              fontSize: '11px',
-              fontWeight: '500',
-              textDecoration: 'none',
-            }}
-          >
-            Designed & Developed by <span style={{ fontWeight: '700', color: '#FFD54F' }}>Mani Raja</span>
-          </a>
-          <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
-            © {new Date().getFullYear()} Eyas Saree Drapist
-          </div>
-        </div>
       </aside>
 
       {/* Main Content */}
@@ -519,6 +497,7 @@ const App: React.FC = () => {
             onEdit={(enquiry) => { setEditingEnquiry(enquiry); setShowEnquiryForm(true); }}
             onDelete={(id) => setEnquiries(enquiries.filter(e => e.id !== id))}
             onConvert={(enquiry) => convertEnquiryToOrder(enquiry)}
+            onNew={() => { setEditingEnquiry(null); setShowEnquiryForm(true); }}
           />
         )}
 
@@ -532,6 +511,7 @@ const App: React.FC = () => {
               setEditingOrder(order);
               setShowOrderForm(true);
             }}
+            onAddCustomer={() => setShowAddCustomer(true)}
           />
         )}
 
@@ -575,107 +555,121 @@ const App: React.FC = () => {
       </main>
 
       {/* Bottom Navigation - Clean Professional */}
+      {/* Bottom Navigation - Docked Glass Panel */}
       <nav style={{
         position: 'fixed',
         bottom: '0',
         left: '0',
         right: '0',
-        background: 'var(--bar-bg)',
-        borderTop: '1px solid var(--gold)',
-        boxShadow: '0 -4px 30px var(--bar-shadow)',
+        background: 'var(--nav-bg)', // Glass effect
+        backdropFilter: 'blur(20px)',
+        borderTop: '1px solid var(--nav-border)',
+        boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.2)',
         display: 'flex',
         justifyContent: 'space-between',
-        padding: '8px 16px',
-        zIndex: 100,
+        alignItems: 'flex-end', // Align items to bottom for better click area
+        padding: '12px 24px 20px 24px', // Extra padding bottom for iPhone home indicator
+        zIndex: 1000,
+        transition: 'all 0.3s ease',
+        borderRadius: '24px 24px 0 0' // Subtle curve at top
       }}>
-        {/* Left Group */}
         {['dashboard', 'orders'].map(id => {
           const item = navItems.find(i => i.id === id);
           if (!item) return null;
+          const isActive = activeTab === item.id;
+          const Icon = item.icon;
           return (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id as any)}
               style={{
-                background: activeTab === item.id ? 'var(--gold)' : 'transparent',
+                background: 'transparent',
                 border: 'none',
-                borderRadius: 'var(--radius)',
-                color: activeTab === item.id ? 'var(--dark)' : 'var(--text-secondary)',
+                color: isActive ? item.color : 'var(--text-secondary)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '4px',
+                gap: '6px',
                 cursor: 'pointer',
-                padding: '8px 12px',
-                minWidth: '60px',
-                transition: 'all 0.2s ease',
+                padding: '0 12px',
+                flex: 1
               }}
             >
-              <Icon symbol={item.symbol} size={24} />
-              <span style={{ fontSize: '10px', fontWeight: activeTab === item.id ? '600' : 'normal' }}>
+              <div style={{
+                transition: 'all 0.3s',
+                transform: isActive ? 'scale(1.1)' : 'scale(1)',
+                filter: isActive ? `drop-shadow(0 0 8px ${item.color}40)` : 'none'
+              }}>
+                <Icon size={20} strokeWidth={2} />
+              </div>
+              <span style={{ fontSize: '11px', fontWeight: isActive ? '600' : '500', opacity: isActive ? 1 : 0.7 }}>
                 {item.label}
               </span>
             </button>
           );
         })}
 
-        {/* Center Menu Button */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          style={{
-            background: sidebarOpen ? 'var(--gold)' : 'rgba(255,255,255,0.1)',
-            border: '1px solid var(--gold)',
-            borderRadius: '50%',
-            color: sidebarOpen ? 'var(--dark)' : 'var(--gold)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0',
-            cursor: 'pointer',
-            width: '56px',
-            height: '56px',
-            marginTop: '-28px', // Floating effect
-            boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
-            transform: sidebarOpen ? 'rotate(90deg)' : 'none',
-            transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-            zIndex: 110,
-          }}
-        >
-          <Icon symbol={sidebarOpen ? "✕" : "☰"} size={26} />
-        </button>
+        {/* Center Menu Button (Integrated Pop-up) */}
+        <div style={{ position: 'relative', top: '-28px', flex: 0.8, display: 'flex', justifyContent: 'center' }}>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            style={{
+              background: 'linear-gradient(135deg, var(--gold) 0%, #E09000 100%)',
+              border: '4px solid var(--bg-modal-solid)', // Match page bg to simulate cutout
+              borderRadius: '50%',
+              width: '64px',
+              height: '64px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+              fontSize: '28px',
+              boxShadow: '0 8px 20px rgba(245, 166, 35, 0.4)',
+              cursor: 'pointer',
+              transition: 'transform 0.2s'
+            }}
+            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
+            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+          </button>
+        </div>
 
-        {/* Right Group */}
         {['enquiries', 'calendar'].map(id => {
           const item = navItems.find(i => i.id === id);
           if (!item) return null;
+          const isActive = activeTab === item.id;
+          const Icon = item.icon;
           return (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id as any)}
               style={{
-                background: activeTab === item.id ? 'var(--gold)' : 'transparent',
+                background: 'transparent',
                 border: 'none',
-                borderRadius: 'var(--radius)',
-                color: activeTab === item.id ? 'var(--dark)' : 'var(--text-secondary)',
+                color: isActive ? item.color : 'var(--text-secondary)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '4px',
+                gap: '6px',
                 cursor: 'pointer',
-                padding: '8px 12px',
-                minWidth: '60px',
-                transition: 'all 0.2s ease',
+                padding: '0 12px',
+                flex: 1
               }}
             >
-              <Icon symbol={item.symbol} size={24} />
-              <span style={{ fontSize: '10px', fontWeight: activeTab === item.id ? '600' : 'normal' }}>
+              <div style={{
+                transition: 'all 0.3s',
+                transform: isActive ? 'scale(1.1)' : 'scale(1)',
+                filter: isActive ? `drop-shadow(0 0 8px ${item.color}40)` : 'none'
+              }}>
+                <Icon size={20} strokeWidth={2} />
+              </div>
+              <span style={{ fontSize: '11px', fontWeight: isActive ? '600' : '500', opacity: isActive ? 1 : 0.7 }}>
                 {item.label}
               </span>
             </button>
           );
         })}
-
       </nav>
 
 
@@ -710,6 +704,31 @@ const App: React.FC = () => {
           />
         )
       }
+
+      {/* Global Search Modal */}
+      {showSearch && (
+        <GlobalSearch
+          orders={orders}
+          enquiries={enquiries}
+          customers={customers}
+          onClose={() => setShowSearch(false)}
+          onViewOrder={(order) => {
+            setShowSearch(false);
+            setEditingOrder(order);
+            setShowOrderForm(true);
+          }}
+        />
+      )}
+      {/* Add Customer Modal */}
+      {showAddCustomer && (
+        <AddCustomerModal
+          onSave={(newCustomer) => {
+            setCustomers([...customers, newCustomer]);
+            setShowAddCustomer(false);
+          }}
+          onClose={() => setShowAddCustomer(false)}
+        />
+      )}
     </div>
   );
 };

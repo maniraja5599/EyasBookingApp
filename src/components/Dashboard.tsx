@@ -116,28 +116,28 @@ export const Dashboard: React.FC<{
           label="Expec. Revenue"
           value={formatCurrency(orders.filter(o => o.eventDate === today).reduce((sum, o) => sum + o.totalAmount, 0))}
           icon="💰"
-          color="#10B981"
+          color="var(--success)"
           subtext="From today's events"
         />
         <StatCard
           label="Today's Orders"
           value={todayEvents.length}
           icon="📦"
-          color="#F5A623"
+          color="var(--warning)"
           subtext={`${orders.filter(o => o.status === 'completed' && o.eventDate === today).length} completed`}
         />
         <StatCard
           label="Pending Due"
           value={formatCurrency(totalPendingAmount)}
           icon="⏳"
-          color="#EF4444"
+          color="var(--error)"
           subtext={`${orders.filter(o => o.totalAmount > o.amountPaid).length} orders pending`}
         />
         <StatCard
           label="New Enquiries"
           value={newEnquiries.length}
           icon="📬"
-          color="#3B82F6"
+          color="var(--info)"
           subtext="Needs attention"
         />
       </div>
@@ -174,7 +174,7 @@ export const Dashboard: React.FC<{
                       top: '50px',
                       bottom: '-20px',
                       width: '2px',
-                      background: 'rgba(255,255,255,0.1)'
+                      background: 'var(--border)'
                     }} />
                   )}
 
@@ -183,9 +183,9 @@ export const Dashboard: React.FC<{
                     width: '50px',
                     height: '50px',
                     borderRadius: '16px',
-                    background: order.status === 'completed' ? '#10B98120' : '#F5A62320',
-                    border: `1px solid ${order.status === 'completed' ? '#10B981' : '#F5A623'}`,
-                    color: order.status === 'completed' ? '#10B981' : '#F5A623',
+                    background: order.status === 'completed' ? 'var(--success-subtle)' : 'var(--warning-subtle)',
+                    border: `1px solid ${order.status === 'completed' ? 'var(--success)' : 'var(--warning)'}`,
+                    color: order.status === 'completed' ? 'var(--success)' : 'var(--warning)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -206,8 +206,8 @@ export const Dashboard: React.FC<{
                         fontSize: '12px',
                         padding: '2px 8px',
                         borderRadius: '4px',
-                        background: order.location === 'onsite' ? '#EF444420' : '#3B82F620',
-                        color: order.location === 'onsite' ? '#EF4444' : '#3B82F6'
+                        background: order.location === 'onsite' ? 'var(--error-subtle)' : 'var(--info-subtle)',
+                        color: order.location === 'onsite' ? 'var(--error)' : 'var(--info)'
                       }}>
                         {order.location === 'onsite' ? '📍 On-Site' : '🏪 At Shop'}
                       </div>
@@ -232,7 +232,7 @@ export const Dashboard: React.FC<{
 
           {/* Pending Payments Alert */}
           {pendingOrders.filter(o => o.totalAmount > o.amountPaid).length > 0 && (
-            <div className="glass-card" style={{ ...cardStyle, background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.08))', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+            <div className="glass-card" style={{ ...cardStyle, background: 'linear-gradient(135deg, var(--error-subtle), transparent)', border: '1px solid var(--error-border)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#EF4444', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   ⚠️ Pending Payments
@@ -246,7 +246,7 @@ export const Dashboard: React.FC<{
                       <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{order.customerName}</div>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{formatDate(order.eventDate)}</div>
                     </div>
-                    <div style={{ fontWeight: 'bold', color: '#EF4444' }}>
+                    <div style={{ fontWeight: 'bold', color: 'var(--error)' }}>
                       {formatCurrency(order.totalAmount - order.amountPaid)}
                     </div>
                   </div>
@@ -265,7 +265,7 @@ export const Dashboard: React.FC<{
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {upcomingEvents.map(order => (
-                  <div key={order.id} style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', borderLeft: '3px solid var(--gold)' }}>
+                  <div key={order.id} style={{ padding: '12px', background: 'var(--input-bg)', borderRadius: '8px', borderLeft: '3px solid var(--gold)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontWeight: 'bold' }}>{order.customerName}</span>
                       <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{formatDate(order.eventDate)}</span>

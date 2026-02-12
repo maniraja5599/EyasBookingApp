@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Order, Enquiry, Customer } from '../types';
 import { Search, MapPin, Phone, Calendar, ChevronRight, X } from 'lucide-react';
 
@@ -15,9 +15,28 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ orders, enquiries, c
     const [searchResults, setSearchResults] = useState<Customer[]>([]);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
+    // Get recent customers (top 10 by last activity)
+    const recentCustomers = useMemo(() => {
+        return [...customers].sort((a, b) => {
+            const getLastActivity = (c: Customer) => {
+                const customerOrders = orders.filter(o => o.phone === c.phone);
+                const customerEnquiries = enquiries.filter(e => e.phone === c.phone);
+
+                const dates = [
+                    ...customerOrders.map(o => o.createdAt),
+                    ...customerEnquiries.map(e => e.createdAt),
+                    c.createdAt
+                ].filter(Boolean).sort().reverse();
+
+                return dates[0] || '';
+            };
+            return getLastActivity(b).localeCompare(getLastActivity(a));
+        }).slice(0, 10);
+    }, [customers, orders, enquiries]);
+
     useEffect(() => {
         if (searchTerm.trim() === '') {
-            setSearchResults([]);
+            setSearchResults(recentCustomers);
             return;
         }
 
@@ -28,7 +47,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ orders, enquiries, c
             (c.permanentAddress && c.permanentAddress.toLowerCase().includes(lowerTerm))
         );
         setSearchResults(results);
-    }, [searchTerm, customers]);
+    }, [searchTerm, customers, recentCustomers]);
 
     // Calculate customer metrics
     const getCustomerMetrics = (customerId: string, customerPhone: string) => {
@@ -114,6 +133,9 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ orders, enquiries, c
                             <div style={{ textAlign: 'center', color: 'var(--text-secondary)', marginTop: '40px' }}>
                                 No customers found matching "{searchTerm}"
                             </div>
+                        )}
+                        {!searchTerm && searchResults.length > 0 && (
+                            <h3 style={{ margin: '0 0 12px 8px', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '600' }}>Recent Customers</h3>
                         )}
                         {searchResults.map(customer => {
                             const { totalPending, totalOrders, totalSarees } = getCustomerMetrics(customer.id, customer.phone);

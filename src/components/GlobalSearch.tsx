@@ -189,7 +189,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ orders, enquiries, c
                 ) : (
                     // Customer Detail View
                     (() => {
-                        const { customerOrders, customerEnquiries, totalSpent, totalPending } = getCustomerMetrics(selectedCustomer.id, selectedCustomer.phone);
+                        const { customerOrders, customerEnquiries, totalSpent, totalOrders, totalSarees, totalPending } = getCustomerMetrics(selectedCustomer.id, selectedCustomer.phone);
                         return (
                             <div style={{ animation: 'slideIn 0.3s ease-out' }}>
                                 <button
@@ -238,14 +238,21 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ orders, enquiries, c
                                         {selectedCustomer.name.charAt(0).toUpperCase()}
                                     </div>
                                     <h2 style={{ margin: '0 0 8px', color: 'var(--text-primary)', fontSize: '24px' }}>{selectedCustomer.name}</h2>
-                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '8px' }}>
-                                        <Phone size={14} /> {selectedCustomer.phone}
-                                    </div>
-                                    {selectedCustomer.permanentAddress && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '14px' }}>
-                                            <MapPin size={14} /> {selectedCustomer.permanentAddress}
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <Phone size={14} /> {selectedCustomer.phone}
+                                            </span>
+                                            <span style={{ fontSize: '12px', background: 'var(--bg-secondary)', padding: '2px 8px', borderRadius: '10px', color: 'var(--text-primary)' }}>
+                                                {totalOrders} Orders • {totalSarees} Sarees
+                                            </span>
                                         </div>
-                                    )}
+                                        {selectedCustomer.permanentAddress && (
+                                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', fontStyle: 'italic' }}>
+                                                <MapPin size={12} /> {selectedCustomer.permanentAddress}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Metrics Cards */}

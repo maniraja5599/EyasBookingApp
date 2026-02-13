@@ -7,27 +7,30 @@ import { Dashboard } from './components/Dashboard';
 import { OrderList } from './components/OrderList';
 import { EnquiryList } from './components/EnquiryList';
 import { Order, Enquiry, Settings, Customer } from './types';
-import { generateId } from './utils';
+import { generateId, formatCurrency, formatDate } from './utils';
 import { ReferralReport } from './components/ReferralReport';
 import { CustomerReport } from './components/CustomerReport';
 import { GlobalSearch } from './components/GlobalSearch';
 import { AddCustomerModal } from './components/AddCustomerModal';
 
-import { LayoutDashboard, Package, ClipboardList, Users, Megaphone, Calendar, Settings as SettingsIcon, Search } from 'lucide-react';
+import { LayoutDashboard, Package, ClipboardList, Users, Megaphone, Calendar, Settings as SettingsIcon, Search, Palette, Bell } from 'lucide-react';
+import { CalendarShowcase } from './components/CalendarShowcase';
 
 
 import logo from './assets/eyas-logo.svg';
 
 // Main App Component
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'enquiries' | 'customers' | 'referrals' | 'calendar' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'enquiries' | 'customers' | 'referrals' | 'calendar' | 'settings' | 'showcase'>('dashboard');
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [editingEnquiry, setEditingEnquiry] = useState<Enquiry | null>(null);
   const [initialEventDate, setInitialEventDate] = useState<string>('');
-  const [showSearch, setShowSearch] = useState(false);
   const [showAddCustomer, setShowAddCustomer] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [notificationFilter, setNotificationFilter] = useState('all');
 
   // Theme State
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -47,23 +50,36 @@ const App: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem('eyas_orders');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('eyas_orders');
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
   });
 
   const [enquiries, setEnquiries] = useState<Enquiry[]>(() => {
-    const saved = localStorage.getItem('eyas_enquiries');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('eyas_enquiries');
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
   });
 
   const [customers, setCustomers] = useState<Customer[]>(() => {
-    const saved = localStorage.getItem('eyas_customers');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('eyas_customers');
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
   });
 
   useEffect(() => {
     localStorage.setItem('eyas_customers', JSON.stringify(customers));
   }, [customers]);
+
+  const [lastViewedCount, setLastViewedCount] = useState<number>(() => {
+    return parseInt(localStorage.getItem('eyas_lastViewedCount') || '0');
+  });
 
   const [settings, setSettings] = useState<Settings>(() => {
     const saved = localStorage.getItem('eyas_settings');
@@ -204,6 +220,7 @@ const App: React.FC = () => {
     { id: 'customers', label: 'Customers', icon: Users, color: '#50E3C2' },
     { id: 'referrals', label: 'Referrals', icon: Megaphone, color: '#F8E71C' },
     { id: 'calendar', label: 'Calendar', icon: Calendar, color: '#E04F5F' },
+    { id: 'showcase', label: 'Styles', icon: Palette, color: '#ffffff' }, // New Showcase Tab
     { id: 'settings', label: 'Settings', icon: SettingsIcon, color: '#9B9B9B' },
   ];
 
@@ -228,13 +245,43 @@ const App: React.FC = () => {
         case '3': setActiveTab('enquiries'); break;
         case '4': setActiveTab('customers'); break;
         case '5': setActiveTab('calendar'); break;
-        case '6': setActiveTab('settings'); break;
+        case '6': setActiveTab('showcase'); break;
+        case '7': setActiveTab('settings'); break;
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeTab]);
 
+  // Notification calculations
+  const today = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+  const todayEvents = orders.filter(o => o.eventDate === today);
+  const tomorrowEvents = orders.filter(o => o.eventDate === tomorrow);
+  const pendingPayments = orders.filter(o => o.totalAmount > o.amountPaid);
+  const newEnquiriesList = enquiries.filter(e => e.status === 'new');
+  const overdueCollections = orders.filter(o => o.collectionDate < today && o.status !== 'delivered' && o.status !== 'completed');
+
+  const totalNotifications = todayEvents.length + tomorrowEvents.length + pendingPayments.length + newEnquiriesList.length + overdueCollections.length;
+  const unreadCount = Math.max(0, totalNotifications - lastViewedCount);
+
+  // Auto-sync lastViewed if total decreases (so we don't block new notifications)
+  useEffect(() => {
+    if (totalNotifications < lastViewedCount) {
+      setLastViewedCount(totalNotifications);
+      localStorage.setItem('eyas_lastViewedCount', totalNotifications.toString());
+    }
+  }, [totalNotifications, lastViewedCount]);
+
+  const handleBellClick = () => {
+    setShowNotifications(!showNotifications);
+    if (!showNotifications) {
+      setLastViewedCount(totalNotifications);
+      localStorage.setItem('eyas_lastViewedCount', totalNotifications.toString());
+      setNotificationFilter('all');
+    }
+  };
 
   return (
     <div style={{
@@ -330,6 +377,283 @@ const App: React.FC = () => {
           >
             <Search size={20} strokeWidth={2} />
           </button>
+
+          {/* Notification Bell */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={handleBellClick}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                borderRadius: '50%',
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: unreadCount > 0 ? '#EF4444' : 'var(--text-secondary)',
+                padding: 0,
+                position: 'relative',
+                animation: unreadCount > 0 ? 'pulse 1.5s infinite' : 'none',
+                transition: 'all 0.3s ease'
+              }}
+              title="Notifications"
+            >
+              <Bell size={20} strokeWidth={unreadCount > 0 ? 2.5 : 2} />
+              {unreadCount > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '-2px',
+                  right: '-2px',
+                  background: '#EF4444',
+                  color: '#fff',
+                  borderRadius: '10px',
+                  padding: '2px 5px',
+                  fontSize: '10px',
+                  fontWeight: 'bold',
+                  minWidth: '18px',
+                  textAlign: 'center',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                  border: '1px solid var(--header-bg)'
+                }}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notification Dropdown */}
+            {showNotifications && (
+              <>
+                {/* Backdrop */}
+                <div
+                  onClick={() => setShowNotifications(false)}
+                  style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 999
+                  }}
+                />
+
+                {/* Dropdown */}
+                <div style={{
+                  position: 'absolute',
+                  top: '45px',
+                  right: '0',
+                  width: '320px',
+                  maxHeight: '400px',
+                  overflowY: 'auto',
+                  background: 'var(--dark-light)',
+                  borderRadius: '16px',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                  border: '1px solid var(--border)',
+                  zIndex: 1000,
+                  animation: 'slideDown 0.2s ease-out'
+                }}>
+                  <div style={{ padding: '16px', borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                        🔔 Notifications
+                      </h3>
+                      {totalNotifications > 0 && (
+                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                          {totalNotifications} New
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Filter Chips */}
+                    <div className="no-scrollbar" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+                      {['all', 'events', 'payments', 'enquiries', 'overdue'].map(f => (
+                        <button
+                          key={f}
+                          onClick={(e) => { e.stopPropagation(); setNotificationFilter(f); }}
+                          style={{
+                            padding: '4px 12px',
+                            borderRadius: '12px',
+                            border: notificationFilter === f ? '1px solid var(--gold)' : '1px solid var(--border)',
+                            background: notificationFilter === f ? 'var(--gold)' : 'var(--dark-lighter)',
+                            color: notificationFilter === f ? '#000' : 'var(--text-secondary)',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            textTransform: 'capitalize'
+                          }}
+                        >
+                          {f}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '8px' }}>
+                    {totalNotifications === 0 ? (
+                      <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                        <div style={{ fontSize: '48px', marginBottom: '12px' }}>🎉</div>
+                        <p style={{ fontSize: '14px', fontWeight: '600' }}>All caught up!</p>
+                        <p style={{ fontSize: '12px' }}>No new notifications</p>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Today's Events */}
+                        {(notificationFilter === 'all' || notificationFilter === 'events') && todayEvents.length > 0 && (
+                          <div style={{ marginBottom: '12px' }}>
+                            <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                              📅 Today's Events ({todayEvents.length})
+                            </div>
+                            {todayEvents.slice(0, 3).map(order => (
+                              <div
+                                key={order.id}
+                                onClick={() => { setActiveTab('orders'); setShowNotifications(false); }}
+                                style={{
+                                  padding: '12px',
+                                  background: 'rgba(59, 130, 246, 0.1)',
+                                  borderRadius: '8px',
+                                  marginBottom: '4px',
+                                  cursor: 'pointer',
+                                  borderLeft: '3px solid #3b82f6',
+                                  transition: 'background 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'}
+                              >
+                                <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '4px' }}>{order.customerName}</div>
+                                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{order.serviceType} • {order.sareeCount} sarees</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Tomorrow's Events */}
+                        {(notificationFilter === 'all' || notificationFilter === 'events') && tomorrowEvents.length > 0 && (
+                          <div style={{ marginBottom: '12px' }}>
+                            <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                              ⏰ Tomorrow ({tomorrowEvents.length})
+                            </div>
+                            {tomorrowEvents.slice(0, 2).map(order => (
+                              <div
+                                key={order.id}
+                                onClick={() => { setActiveTab('orders'); setShowNotifications(false); }}
+                                style={{
+                                  padding: '12px',
+                                  background: 'rgba(243, 156, 18, 0.1)',
+                                  borderRadius: '8px',
+                                  marginBottom: '4px',
+                                  cursor: 'pointer',
+                                  borderLeft: '3px solid #f39c12',
+                                  transition: 'background 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(243, 156, 18, 0.2)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(243, 156, 18, 0.1)'}
+                              >
+                                <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '4px' }}>{order.customerName}</div>
+                                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{order.serviceType} • {order.sareeCount} sarees</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Pending Payments */}
+                        {(notificationFilter === 'all' || notificationFilter === 'payments') && pendingPayments.length > 0 && (
+                          <div style={{ marginBottom: '12px' }}>
+                            <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                              💰 Pending Payments ({pendingPayments.length})
+                            </div>
+                            {pendingPayments.slice(0, 2).map(order => (
+                              <div
+                                key={order.id}
+                                onClick={() => { setActiveTab('orders'); setShowNotifications(false); }}
+                                style={{
+                                  padding: '12px',
+                                  background: 'rgba(239, 68, 68, 0.1)',
+                                  borderRadius: '8px',
+                                  marginBottom: '4px',
+                                  cursor: 'pointer',
+                                  borderLeft: '3px solid #EF4444',
+                                  transition: 'background 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                              >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <div>
+                                    <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '4px' }}>{order.customerName}</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Due: {formatCurrency(order.totalAmount - order.amountPaid)}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* New Enquiries */}
+                        {(notificationFilter === 'all' || notificationFilter === 'enquiries') && newEnquiriesList.length > 0 && (
+                          <div style={{ marginBottom: '12px' }}>
+                            <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                              📬 New Enquiries ({newEnquiriesList.length})
+                            </div>
+                            {newEnquiriesList.slice(0, 2).map(enquiry => (
+                              <div
+                                key={enquiry.id}
+                                onClick={() => { setActiveTab('enquiries'); setShowNotifications(false); }}
+                                style={{
+                                  padding: '12px',
+                                  background: 'rgba(155, 89, 182, 0.1)',
+                                  borderRadius: '8px',
+                                  marginBottom: '4px',
+                                  cursor: 'pointer',
+                                  borderLeft: '3px solid #9b59b6',
+                                  transition: 'background 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(155, 89, 182, 0.2)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(155, 89, 182, 0.1)'}
+                              >
+                                <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '4px' }}>{enquiry.customerName}</div>
+                                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{enquiry.phone}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Overdue Collections */}
+                        {(notificationFilter === 'all' || notificationFilter === 'overdue') && overdueCollections.length > 0 && (
+                          <div style={{ marginBottom: '12px' }}>
+                            <div style={{ padding: '8px 12px', fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                              ⚠️ Overdue Collections ({overdueCollections.length})
+                            </div>
+                            {overdueCollections.slice(0, 2).map(order => (
+                              <div
+                                key={order.id}
+                                onClick={() => { setActiveTab('orders'); setShowNotifications(false); }}
+                                style={{
+                                  padding: '12px',
+                                  background: 'rgba(239, 68, 68, 0.1)',
+                                  borderRadius: '8px',
+                                  marginBottom: '4px',
+                                  cursor: 'pointer',
+                                  borderLeft: '3px solid #EF4444',
+                                  transition: 'background 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                              >
+                                <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '4px' }}>{order.customerName}</div>
+                                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Collection was: {formatDate(order.collectionDate)}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -455,6 +779,7 @@ const App: React.FC = () => {
         padding: '20px',
         paddingBottom: '90px',
         overflowY: 'auto',
+        overflowX: 'hidden',
       }}>
         {activeTab === 'dashboard' && (
           <Dashboard
@@ -537,6 +862,10 @@ const App: React.FC = () => {
           />
         )}
 
+        {activeTab === 'showcase' && (
+          <CalendarShowcase orders={orders} enquiries={enquiries} />
+        )}
+
         {activeTab === 'settings' && (
           <SettingsPanel
             settings={settings}
@@ -556,121 +885,123 @@ const App: React.FC = () => {
 
       {/* Bottom Navigation - Clean Professional */}
       {/* Bottom Navigation - Docked Glass Panel */}
-      <nav style={{
-        position: 'fixed',
-        bottom: '0',
-        left: '0',
-        right: '0',
-        background: 'var(--nav-bg)', // Glass effect
-        backdropFilter: 'blur(20px)',
-        borderTop: '1px solid var(--nav-border)',
-        boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.2)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-end', // Align items to bottom for better click area
-        padding: '12px 24px 20px 24px', // Extra padding bottom for iPhone home indicator
-        zIndex: 1000,
-        transition: 'all 0.3s ease',
-        borderRadius: '24px 24px 0 0' // Subtle curve at top
-      }}>
-        {['dashboard', 'orders'].map(id => {
-          const item = navItems.find(i => i.id === id);
-          if (!item) return null;
-          const isActive = activeTab === item.id;
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id as any)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: isActive ? item.color : 'var(--text-secondary)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '6px',
-                cursor: 'pointer',
-                padding: '0 12px',
-                flex: 1
-              }}
-            >
-              <div style={{
-                transition: 'all 0.3s',
-                transform: isActive ? 'scale(1.1)' : 'scale(1)',
-                filter: isActive ? `drop-shadow(0 0 8px ${item.color}40)` : 'none'
-              }}>
-                <Icon size={20} strokeWidth={2} />
-              </div>
-              <span style={{ fontSize: '11px', fontWeight: isActive ? '600' : '500', opacity: isActive ? 1 : 0.7 }}>
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
+      {!showOrderForm && !showEnquiryForm && (
+        <nav style={{
+          position: 'fixed',
+          bottom: '0',
+          left: '0',
+          right: '0',
+          background: 'var(--nav-bg)', // Glass effect
+          backdropFilter: 'blur(20px)',
+          borderTop: '1px solid var(--nav-border)',
+          boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.2)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end', // Align items to bottom for better click area
+          padding: '12px 24px 20px 24px', // Extra padding bottom for iPhone home indicator
+          zIndex: 1000,
+          transition: 'all 0.3s ease',
+          borderRadius: '24px 24px 0 0' // Subtle curve at top
+        }}>
+          {['dashboard', 'orders'].map(id => {
+            const item = navItems.find(i => i.id === id);
+            if (!item) return null;
+            const isActive = activeTab === item.id;
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id as any)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: isActive ? item.color : 'var(--text-secondary)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  padding: '0 12px',
+                  flex: 1
+                }}
+              >
+                <div style={{
+                  transition: 'all 0.3s',
+                  transform: isActive ? 'scale(1.1)' : 'scale(1)',
+                  filter: isActive ? `drop-shadow(0 0 8px ${item.color}40)` : 'none'
+                }}>
+                  <Icon size={20} strokeWidth={2} />
+                </div>
+                <span style={{ fontSize: '11px', fontWeight: isActive ? '600' : '500', opacity: isActive ? 1 : 0.7 }}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
 
-        {/* Center Menu Button (Integrated Pop-up) */}
-        <div style={{ position: 'relative', top: '-28px', flex: 0.8, display: 'flex', justifyContent: 'center' }}>
-          <button
-            onClick={() => setSidebarOpen(true)}
-            style={{
-              background: 'linear-gradient(135deg, var(--gold) 0%, #E09000 100%)',
-              border: '4px solid var(--bg-modal-solid)', // Match page bg to simulate cutout
-              borderRadius: '50%',
-              width: '64px',
-              height: '64px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontSize: '28px',
-              boxShadow: '0 8px 20px rgba(245, 166, 35, 0.4)',
-              cursor: 'pointer',
-              transition: 'transform 0.2s'
-            }}
-            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
-            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
-          >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
-          </button>
-        </div>
-
-        {['enquiries', 'calendar'].map(id => {
-          const item = navItems.find(i => i.id === id);
-          if (!item) return null;
-          const isActive = activeTab === item.id;
-          const Icon = item.icon;
-          return (
+          {/* Center Menu Button (Integrated Pop-up) */}
+          <div style={{ position: 'relative', top: '-28px', flex: 0.8, display: 'flex', justifyContent: 'center' }}>
             <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id as any)}
+              onClick={() => setSidebarOpen(true)}
               style={{
-                background: 'transparent',
-                border: 'none',
-                color: isActive ? item.color : 'var(--text-secondary)',
+                background: 'linear-gradient(135deg, var(--gold) 0%, #E09000 100%)',
+                border: '4px solid var(--bg-modal-solid)', // Match page bg to simulate cutout
+                borderRadius: '50%',
+                width: '64px',
+                height: '64px',
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
-                gap: '6px',
+                justifyContent: 'center',
+                color: '#fff',
+                fontSize: '28px',
+                boxShadow: '0 8px 20px rgba(245, 166, 35, 0.4)',
                 cursor: 'pointer',
-                padding: '0 12px',
-                flex: 1
+                transition: 'transform 0.2s'
               }}
+              onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
+              onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
             >
-              <div style={{
-                transition: 'all 0.3s',
-                transform: isActive ? 'scale(1.1)' : 'scale(1)',
-                filter: isActive ? `drop-shadow(0 0 8px ${item.color}40)` : 'none'
-              }}>
-                <Icon size={20} strokeWidth={2} />
-              </div>
-              <span style={{ fontSize: '11px', fontWeight: isActive ? '600' : '500', opacity: isActive ? 1 : 0.7 }}>
-                {item.label}
-              </span>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
             </button>
-          );
-        })}
-      </nav>
+          </div>
+
+          {['enquiries', 'calendar'].map(id => {
+            const item = navItems.find(i => i.id === id);
+            if (!item) return null;
+            const isActive = activeTab === item.id;
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id as any)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: isActive ? item.color : 'var(--text-secondary)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  padding: '0 12px',
+                  flex: 1
+                }}
+              >
+                <div style={{
+                  transition: 'all 0.3s',
+                  transform: isActive ? 'scale(1.1)' : 'scale(1)',
+                  filter: isActive ? `drop-shadow(0 0 8px ${item.color}40)` : 'none'
+                }}>
+                  <Icon size={20} strokeWidth={2} />
+                </div>
+                <span style={{ fontSize: '11px', fontWeight: isActive ? '600' : '500', opacity: isActive ? 1 : 0.7 }}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
 
 
 
